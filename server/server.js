@@ -12,7 +12,7 @@ connectDB();
 // Middleware
 app.use(cors({
   origin: [
-    'http://localhost:5173','http://localhost:5174' //  local frontend
+    'http://localhost:5173','http://localhost:5174', //  local frontend
     process.env.CLIENT_URL   //Render
   ],
   credentials: true
