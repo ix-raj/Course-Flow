@@ -13,7 +13,7 @@ connectDB();
 app.use(cors({
   origin: [
     'http://localhost:5173','http://localhost:5174', //  local frontend
-    process.env.CLIENT_URL   //Render
+     'https://course-flow-psi.vercel.app/'  //vercel
   ],
   credentials: true
 }));
