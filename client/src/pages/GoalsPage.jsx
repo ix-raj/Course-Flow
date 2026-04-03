@@ -209,8 +209,10 @@ function CustomTimePicker({ value, onChange, isDarkMode }) {
   React.useEffect(() => {
     if (typeof value === "string" && value.includes(":")) {
       const parts = value.split(":");
-      const hour = String(parts || "12").padStart(2, "0");
-      const minute = String(parts || "00").padStart(2, "0");
+  
+      const hour = String(parts[0] || "12").padStart(2, "0");
+      const minute = String(parts[1] || "00").padStart(2, "0");
+  
       setInternalTime(`${hour}:${minute}`);
     } else {
       setInternalTime("12:00");
