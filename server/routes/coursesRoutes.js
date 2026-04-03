@@ -37,31 +37,6 @@ router.post('/', protect, async (req, res) => {
   }
 });
 
-// @route   PUT /api/courses/:id
-// @desc    Update course details (New functional route)
-router.put('/:id', protect, async (req, res) => {
-  try {
-    const { title, description, cover } = req.body;
-    
-    let course = await Course.findById(req.params.id);
-    if (!course) return res.status(404).json({ message: 'Course not found' });
-    
-    // Security check: Verify ownership
-    if (course.user.toString() !== req.user._id.toString()) {
-      return res.status(401).json({ message: 'Not authorized' });
-    }
-
-    course = await Course.findByIdAndUpdate(
-      req.params.id,
-      { $set: { title, description, cover } },
-      { new: true }
-    );
-
-    res.json(course);
-  } catch (error) {
-    res.status(500).json({ message: 'Failed to update course' });
-  }
-});
 
 // @route   DELETE /api/courses/:id
 router.delete('/:id', protect, async (req, res) => {
@@ -80,5 +55,33 @@ router.delete('/:id', protect, async (req, res) => {
     res.status(500).json({ message: 'Failed to delete course' });
   }
 });
+
+
+// @route   PUT /api/courses/:id
+// @desc    Update course metadata (Name, Cover, Description, Links)
+router.put('/:id', protect, async (req, res) => {
+  try {
+    const { title, description, cover, customLinks, tags } = req.body;
+    
+    let course = await Course.findById(req.params.id);
+    if (!course) return res.status(404).json({ message: 'Course not found' });
+    
+    // Authorization Check
+    if (course.user.toString() !== req.user._id.toString()) {
+      return res.status(401).json({ message: 'Not authorized' });
+    }
+
+    course = await Course.findByIdAndUpdate(
+      req.params.id,
+      { $set: { title, description, cover, customLinks, tags } },
+      { new: true }
+    );
+
+    res.json(course);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to update course' });
+  }
+});
+
 
 module.exports = router;

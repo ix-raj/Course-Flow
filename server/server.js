@@ -1,4 +1,3 @@
-// server/server.js
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -6,10 +5,8 @@ const connectDB = require('./config/db');
 
 const app = express();
 
-// Connect Database
 connectDB();
 
-// Middleware
 app.use(cors({
   origin: [
     'http://localhost:5173',
@@ -21,7 +18,7 @@ app.use(cors({
   credentials: true
 }));
 
-// Increase payload limits for Base64 course covers
+// FIX: Set 50mb limit for course covers and large data syncs
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 

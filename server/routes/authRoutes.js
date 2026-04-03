@@ -60,4 +60,23 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// @route   PUT /api/auth/preferences
+// @desc    Update User UI Preferences (Theme)
+router.put('/preferences', protect, async (req, res) => {
+  try {
+    const { isDarkMode } = req.body;
+    const user = await User.findById(req.user._id);
+    
+    if (user) {
+      user.preferences = { isDarkMode };
+      await user.save();
+      res.json(user.preferences);
+    } else {
+      res.status(404).json({ message: 'User not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;

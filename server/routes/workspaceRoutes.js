@@ -14,28 +14,56 @@ router.get('/', protect, async (req, res) => {
   }
 });
 
+
 // @route   PUT /api/workspace/:courseId/video
+// @desc    Sync ALL video-specific data (Time, Completion, Notes, Doubts, Tasks)
 router.put('/:courseId/video', protect, async (req, res) => {
   try {
-    const { fileName, time, completed, doubts } = req.body;
+    const { fileName, time, completed, doubts, notes, tasks } = req.body;
     
     const workspace = await Workspace.findOne({ user: req.user._id, course: req.params.courseId });
     if (!workspace) return res.status(404).json({ message: 'Workspace not found' });
 
-    // Ensure we handle Map updates correctly
-    const currentData = workspace.videoProgress.get(fileName) || { time: 0, completed: false, doubts: [] };
+    // Get existing data for this file or initialize defaults
+    const currentData = workspace.videoProgress.get(fileName) || { 
+      time: 0, 
+      completed: false, 
+      doubts: [], 
+      notes: [], 
+      tasks: [] 
+    };
     
+    // Update fields only if they are provided in the request
     if (time !== undefined) currentData.time = time;
     if (completed !== undefined) currentData.completed = completed;
     if (doubts !== undefined) currentData.doubts = doubts;
+    if (notes !== undefined) currentData.notes = notes;
+    if (tasks !== undefined) currentData.tasks = tasks;
 
     workspace.videoProgress.set(fileName, currentData);
     await workspace.save();
 
     res.json(workspace);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Failed to update workspace progress' });
+    res.status(500).json({ message: 'Failed to sync video progress' });
+  }
+});
+
+// @route   PUT /api/workspace/:courseId/goals
+// @desc    Update the Course-Wide Goals (not specific to one video)
+router.put('/:courseId/goals', protect, async (req, res) => {
+  try {
+    const { courseGoals } = req.body;
+    const workspace = await Workspace.findOne({ user: req.user._id, course: req.params.courseId });
+    
+    if (!workspace) return res.status(404).json({ message: 'Workspace not found' });
+
+    workspace.courseGoals = courseGoals;
+    await workspace.save();
+
+    res.json(workspace.courseGoals);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to update course goals' });
   }
 });
 

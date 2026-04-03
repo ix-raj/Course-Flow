@@ -60,6 +60,17 @@ function AppContent() {
   const [playlists, setPlaylists] = useState([]);
   const [userData, setUserData] = useState({});
 
+  const updateProductivity = async (updates) => {
+    try {
+      // This calls the PUT /api/productivity route built in Phase 3
+      const { data } = await api.put('/productivity', updates);
+      return data;
+    } catch (err) {
+      console.error("Failed to sync productivity data", err);
+      throw err;
+    }
+  };
+
   // Global Font Loader
   useEffect(() => {
     const link = document.createElement('link');
@@ -68,6 +79,17 @@ function AppContent() {
     document.head.appendChild(link);
     return () => document.head.removeChild(link);
   }, []);
+
+  // Add this effect to sync theme changes to the user's cloud profile
+  useEffect(() => {
+    if (user) {
+      api.put('/auth/preferences', { isDarkMode }).catch(err => 
+        console.error("Failed to sync theme to cloud", err)
+      );
+    }
+  }, [isDarkMode, user, api]); 
+
+
 
   useEffect(() => {
     if (!user) {
@@ -159,11 +181,113 @@ function AppContent() {
     }
   };
 
+
+
+  const updateFileTime = async (playlistId, fileName, time, duration) => { 
+    const isCompleted = (duration > 0 && time / duration > 0.9);
+    
+    // Update UI instantly
+    setUserData(prev => { 
+      const plData = prev[playlistId] || {}; 
+      const fileData = plData[fileName] || { notes: [], doubts: [], tasks: [], completed: false }; 
+      const finalCompleted = fileData.completed || isCompleted; 
+      return { ...prev, [playlistId]: { ...plData, [fileName]: { ...fileData, time, completed: finalCompleted } } }; 
+    }); 
+
+    // Sync to Cloud
+    try { 
+      await api.put(`/workspace/${playlistId}/video`, { fileName, time, completed: isCompleted }); 
+    } catch(e) { console.error("Timeline sync failed", e); }
+  };
+  
+
+  
+  
+
+  // 1. Unified Entry Sync (Covers Notes, Doubts, and Video-Specific Tasks)
+  const addEntry = async (playlistId, fileName, type, content) => { 
+    setUserData(prev => { 
+      const plData = prev[playlistId] || {}; 
+      const fileData = plData[fileName] || { notes: [], doubts: [], tasks: [], completed: false }; 
+      const newEntry = type === 'tasks' ? { id: Date.now().toString(), text: content, done: false } : content; 
+      
+      const updatedEntries = [...(fileData[type] || []), newEntry];
+      const updatedPlaylistData = { ...plData, [fileName]: { ...fileData, [type]: updatedEntries } };
+      
+      // Cloud Sync: Update the specific video's map entry
+      api.put(`/workspace/${playlistId}/video`, { 
+        fileName, 
+        [type]: updatedEntries 
+      }).catch(err => console.error(`Failed to sync ${type}`, err));
+
+      return { ...prev, [playlistId]: updatedPlaylistData }; 
+    }); 
+  };
+
+  // 2. Remove Entry Sync
+  const removeEntry = async (playlistId, fileName, type, index) => { 
+    setUserData(prev => { 
+      const plData = prev[playlistId] || {}; 
+      const fileData = plData[fileName]; 
+      if (!fileData) return prev; 
+      
+      const newArray = [...fileData[type]]; 
+      newArray.splice(index, 1); 
+      
+      // Cloud Sync
+      api.put(`/workspace/${playlistId}/video`, { 
+        fileName, 
+        [type]: newArray 
+      }).catch(err => console.error(`Failed to sync deletion of ${type}`, err));
+
+      return { ...prev, [playlistId]: { ...plData, [fileName]: { ...fileData, [type]: newArray } } }; 
+    }); 
+  };
+
+  // 3. Toggle Video Task Sync
+  const toggleTask = async (playlistId, fileName, index) => { 
+    setUserData(prev => { 
+      const plData = prev[playlistId] || {}; 
+      const fileData = plData[fileName]; 
+      if (!fileData) return prev; 
+      
+      const newTasks = fileData.tasks.map((t, i) => i === index ? { ...t, done: !t.done } : t); 
+      
+      // Cloud Sync
+      api.put(`/workspace/${playlistId}/video`, { 
+        fileName, 
+        tasks: newTasks 
+      }).catch(err => console.error("Failed to sync task toggle", err));
+
+      return { ...prev, [playlistId]: { ...plData, [fileName]: { ...fileData, tasks: newTasks } } }; 
+    }); 
+  };
+
+  // 4. Toggle Completion Sync
+  const toggleFileCompletion = async (playlistId, fileName) => { 
+    setUserData(prev => { 
+      const plData = prev[playlistId] || {}; 
+      const fileData = plData[fileName] || { notes: [], doubts: [], tasks: [], completed: false }; 
+      const newCompletedState = !fileData.completed;
+
+      // Cloud Sync
+      api.put(`/workspace/${playlistId}/video`, { 
+        fileName, 
+        completed: newCompletedState 
+      }).catch(err => console.error("Failed to sync completion", err));
+
+      return { ...prev, [playlistId]: { ...plData, [fileName]: { ...fileData, completed: newCompletedState } } }; 
+    }); 
+  };
+
+  // 5. Delete Course (Backend Cleanup)
   const handleDeletePlaylist = async (playlistId) => {
     requireAuth(async () => {
       if (window.confirm("Are you sure you want to delete this course? All cloud progress will be lost.")) {
         try {
-          await api.delete(`/courses/${playlistId}`);
+          // This now triggers the cascading delete we added in Phase 2
+          await api.delete(`/courses/${playlistId}`); 
+          
           setPlaylists(prev => prev.filter(p => p.id !== playlistId));
           setUserData(prev => { const newData = { ...prev }; delete newData[playlistId]; return newData; });
           setSessionFiles(prev => { const newFiles = { ...prev }; delete newFiles[playlistId]; return newFiles; });
@@ -174,28 +298,6 @@ function AppContent() {
       }
     });
   };
-
-  const updateFileTime = async (playlistId, fileName, time, duration) => { 
-    const isCompleted = (duration > 0 && time / duration > 0.9);
-    setUserData(prev => { 
-      const plData = prev[playlistId] || {}; const fileData = plData[fileName] || { notes: [], doubts: [], tasks: [], completed: false }; const finalCompleted = fileData.completed || isCompleted; 
-      return { ...prev, [playlistId]: { ...plData, [fileName]: { ...fileData, time, completed: finalCompleted } } }; 
-    }); 
-    try { await api.put(`/workspace/${playlistId}/video`, { fileName, time, completed: isCompleted }); } catch(e) {}
-  };
-  
-  const toggleFileCompletion = async (playlistId, fileName) => { 
-    let newCompletedState = false;
-    setUserData(prev => { 
-      const plData = prev[playlistId] || {}; const fileData = plData[fileName] || { notes: [], doubts: [], tasks: [], completed: false }; newCompletedState = !fileData.completed;
-      return { ...prev, [playlistId]: { ...plData, [fileName]: { ...fileData, completed: newCompletedState } } }; 
-    }); 
-    try { await api.put(`/workspace/${playlistId}/video`, { fileName, completed: newCompletedState }); } catch(e) {}
-  };
-  
-  const addEntry = (playlistId, fileName, type, content) => { setUserData(prev => { const plData = prev[playlistId] || {}; const fileData = plData[fileName] || { notes: [], doubts: [], tasks: [], completed: false }; const newEntry = type === 'tasks' ? { id: Date.now(), text: content, done: false } : content; return { ...prev, [playlistId]: { ...plData, [fileName]: { ...fileData, [type]: [...(fileData[type] || []), newEntry] } } }; }); };
-  const removeEntry = (playlistId, fileName, type, index) => { setUserData(prev => { const plData = prev[playlistId] || {}; const fileData = plData[fileName]; if (!fileData) return prev; const newArray = [...fileData[type]]; newArray.splice(index, 1); return { ...prev, [playlistId]: { ...plData, [fileName]: { ...fileData, [type]: newArray } } }; }); };
-  const toggleTask = (playlistId, fileName, index) => { setUserData(prev => { const plData = prev[playlistId] || {}; const fileData = plData[fileName]; if (!fileData) return prev; const newTasks = fileData.tasks.map((t, i) => i === index ? { ...t, done: !t.done } : t); return { ...prev, [playlistId]: { ...plData, [fileName]: { ...fileData, tasks: newTasks } } }; }); };
 
   if (loading) {
     return (
@@ -218,8 +320,18 @@ function AppContent() {
 
         <Route path="/course/:id" element={<CourseRoute playlists={playlists} sessionFiles={sessionFiles} setSessionFiles={setSessionFiles} userData={userData} updateFileTime={updateFileTime} toggleFileCompletion={toggleFileCompletion} addEntry={addEntry} removeEntry={removeEntry} toggleTask={toggleTask} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} navigate={navigate}/>} />
         
-        <Route path="/goals" element={<GoalsPage playlists={playlists || []} userData={userData || {}} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />} />
-
+        <Route 
+          path="/goals" 
+          element={
+            <GoalsPage 
+              playlists={playlists || []} 
+              userData={userData || {}} 
+              isDarkMode={isDarkMode} 
+              setIsDarkMode={setIsDarkMode}
+              onSync={updateProductivity} // Pass the new sync function
+            />
+          } 
+        />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
 

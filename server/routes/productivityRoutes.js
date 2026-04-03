@@ -1,4 +1,4 @@
-// routes/productivity.js
+// server/routes/productivityRoutes.js
 const express = require('express');
 const router = express.Router();
 const Productivity = require('../models/Productivity');
@@ -10,9 +10,13 @@ router.get('/', protect, async (req, res) => {
   try {
     let prod = await Productivity.findOne({ user: req.user._id });
     
-    // If user opens Goals for the first time, generate their doc
     if (!prod) {
-      prod = await Productivity.create({ user: req.user._id, weeklyPlan: {}, completionLog: {}, monthlyEvents: {} });
+      prod = await Productivity.create({ 
+        user: req.user._id, 
+        weeklyPlan: {}, 
+        completionLog: {}, 
+        monthlyEvents: {} 
+      });
     }
     
     res.json(prod);
@@ -22,17 +26,25 @@ router.get('/', protect, async (req, res) => {
 });
 
 // @route   PUT /api/productivity
-// @desc    Update the entire productivity document (easy sync)
+// @desc    Update specific sections of the planner (Weekly Plan, Events, or Log)
 router.put('/', protect, async (req, res) => {
   try {
+    const { weeklyPlan, completionLog, monthlyEvents } = req.body;
+    
+    const updateData = {};
+    if (weeklyPlan) updateData.weeklyPlan = weeklyPlan;
+    if (completionLog) updateData.completionLog = completionLog;
+    if (monthlyEvents) updateData.monthlyEvents = monthlyEvents;
+
     const updatedProd = await Productivity.findOneAndUpdate(
       { user: req.user._id },
-      { $set: req.body },
+      { $set: updateData },
       { new: true, upsert: true }
     );
+    
     res.json(updatedProd);
   } catch (error) {
-    res.status(500).json({ message: 'Failed to update productivity' });
+    res.status(500).json({ message: 'Failed to update productivity data' });
   }
 });
 

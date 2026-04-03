@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 // --- UI COMPONENTS ---
 import { Header } from '../components/ui/Header';
@@ -12,19 +13,19 @@ import {
 } from 'lucide-react';
 
 // --- HOOKS & UTILS ---
-import { useLocalStorage } from '../hooks/useLocalStorage';
 import { getTodayDay, getTodayDateStr, formatFullDate, getFutureDateArray } from '../utils/dateUtils';
 import { calculateCourseProgress } from '../utils/metrics';
 
 
-export default function GoalsPage({ playlists, userData, isDarkMode, setIsDarkMode }) {
-  const navigate = useNavigate();
+export default function GoalsPage({ playlists, userData, isDarkMode, setIsDarkMode, onSync }) {
+    const navigate = useNavigate();
+    const { api } = useAuth();
   
   // Base States
   const [activeTab, setActiveTab] = useState('daily'); 
   
   // Data States
-  const [weeklyPlan, setWeeklyPlan] = useLocalStorage('cf_v3_weekly_plan', {
+  const [weeklyPlan, setWeeklyPlan] = useState({
     Monday: { focus: "", subjects: [] },
     Tuesday: { focus: "", subjects: [] },
     Wednesday: { focus: "", subjects: [] },
@@ -33,8 +34,8 @@ export default function GoalsPage({ playlists, userData, isDarkMode, setIsDarkMo
     Saturday: { focus: "", subjects: [] },
     Sunday: { focus: "", subjects: [] }
   });
-  const [monthlyEvents, setMonthlyEvents] = useLocalStorage('cf_v3_monthly_events', {});
-  const [completionLog, setCompletionLog] = useLocalStorage('cf_v3_completion_log', {});
+  const [monthlyEvents, setMonthlyEvents] = useState({});
+  const [completionLog, setCompletionLog] = useState({});
 
   // Floating Elements
   const [reminderPopup, setReminderPopup] = useState(null);
@@ -65,6 +66,24 @@ export default function GoalsPage({ playlists, userData, isDarkMode, setIsDarkMo
     return events.sort((a,b) => a.date.localeCompare(b.date));
   }, [monthlyEvents, todayDateStr, tenDaysStr]);
 
+  useEffect(() => {
+    const loadProductivity = async () => {
+        try {
+            // Use the api instance from your AuthContext if available, 
+            // or a fetcher passed from App.jsx
+            const { data } = await api.get('/productivity');
+            if (data) {
+                if (data.weeklyPlan) setWeeklyPlan(data.weeklyPlan);
+                if (data.completionLog) setCompletionLog(data.completionLog);
+                if (data.monthlyEvents) setMonthlyEvents(data.monthlyEvents);
+            }
+        } catch (err) {
+            console.error("Failed to load cloud productivity data", err);
+        }
+    };
+    loadProductivity();
+}, []);
+
   // Notifications
   useEffect(() => {
     if ("Notification" in window && Notification.permission !== "granted") Notification.requestPermission();
@@ -90,11 +109,17 @@ export default function GoalsPage({ playlists, userData, isDarkMode, setIsDarkMo
   }, [allTodaysTasks, todayDateStr, completionLog]);
 
   // Tick Checkbox Handler
-  const handleToggleTask = (taskId) => {
-    const logKey = `${todayDateStr}_${taskId}`;
-    const isCompletedNow = !completionLog[logKey];
-    setCompletionLog(prev => ({ ...prev, [logKey]: isCompletedNow }));
-  };
+ const handleToggleTask = (day, subjectId, taskId) => {
+    const updatedPlan = { ...weeklyPlan };
+    const subject = updatedPlan[day].subjects.find(s => s.id === subjectId);
+    const task = subject.tasks.find(t => t.id === taskId);
+    task.done = !task.done;
+
+    setWeeklyPlan(updatedPlan);
+    
+    // NEW: Sync to cloud
+    onSync({ weeklyPlan: updatedPlan });
+};
 
   return (
     <div className={`min-h-screen flex flex-col relative transition-colors duration-300 font-['Inter',sans-serif] ${isDarkMode ? 'bg-[#0B1121] text-slate-300' : 'bg-slate-50 text-slate-800'}`}>
@@ -595,7 +620,7 @@ function DailyView({
 // ==========================================
 // WEEKLY CONFIG 
 
-function WeeklyConfig({ plan, setPlan, playlists, isDarkMode, todayDay }) {
+function WeeklyConfig({ plan, setPlan, playlists, isDarkMode, todayDay, onSync }) {
   const [selectedDay, setSelectedDay] = useState(todayDay || 'Monday');
   const [taskInputs, setTaskInputs] = useState({}); 
   const [editingLink, setEditingLink] = useState({}); 
@@ -626,29 +651,41 @@ function WeeklyConfig({ plan, setPlan, playlists, isDarkMode, todayDay }) {
   
   const handleAddSubject = () => {
     const newSub = { id: Date.now().toString(), name: "", tasks: [], courses: [], actionUrls: {} };
-    setPlan(prev => ({ ...prev, [selectedDay]: { ...prev[selectedDay], subjects: [...(prev[selectedDay]?.subjects||[]), newSub] } }));
-  };
-
-  const updateSubjectField = (subId, field, val) => {
-    setPlan(prev => {
-      const updatedSubs = prev[selectedDay].subjects.map(s => s.id === subId ? { ...s, [field]: val } : s);
-      return { ...prev, [selectedDay]: { ...prev[selectedDay], subjects: updatedSubs } };
-    });
-  };
-
-  const updateActionUrl = (subId, key, field, val) => {
-    setPlan(prev => {
-      const updatedSubs = prev[selectedDay].subjects.map(s => {
-        if (s.id !== subId) return s;
-        const currentAction = s.actionUrls?.[key] || { label: '', url: '' };
-        return { ...s, actionUrls: { ...(s.actionUrls || {}), [key]: { ...currentAction, [field]: val } } };
-      });
-      return { ...prev, [selectedDay]: { ...prev[selectedDay], subjects: updatedSubs } };
-    });
+    const newWeeklyPlan = { 
+      ...plan, 
+      [selectedDay]: { ...plan[selectedDay], subjects: [...(plan[selectedDay]?.subjects||[]), newSub] } 
+    };
+    setPlan(newWeeklyPlan);
+    onSync({ weeklyPlan: newWeeklyPlan });
   };
 
   const deleteSubject = (subId) => {
-    setPlan(prev => ({ ...prev, [selectedDay]: { ...prev[selectedDay], subjects: prev[selectedDay].subjects.filter(s => s.id !== subId) } }));
+    const newWeeklyPlan = { 
+      ...plan, 
+      [selectedDay]: { ...plan[selectedDay], subjects: plan[selectedDay].subjects.filter(s => s.id !== subId) } 
+    };
+    setPlan(newWeeklyPlan);
+    onSync({ weeklyPlan: newWeeklyPlan });
+  };
+
+  const updateSubjectField = (subId, field, val) => {
+    const updatedSubs = plan[selectedDay].subjects.map(s => s.id === subId ? { ...s, [field]: val } : s);
+    const newWeeklyPlan = { ...plan, [selectedDay]: { ...plan[selectedDay], subjects: updatedSubs } };
+    
+    setPlan(newWeeklyPlan);
+    onSync({ weeklyPlan: newWeeklyPlan });
+  };
+
+  const updateActionUrl = (subId, key, field, val) => {
+    const updatedSubs = plan[selectedDay].subjects.map(s => {
+      if (s.id !== subId) return s;
+      const currentAction = s.actionUrls?.[key] || { label: '', url: '' };
+      return { ...s, actionUrls: { ...(s.actionUrls || {}), [key]: { ...currentAction, [field]: val } } };
+    });
+    const newWeeklyPlan = { ...plan, [selectedDay]: { ...plan[selectedDay], subjects: updatedSubs } };
+    
+    setPlan(newWeeklyPlan);
+    onSync({ weeklyPlan: newWeeklyPlan });
   };
 
   const handleAddTask = (subId) => {
@@ -656,24 +693,26 @@ function WeeklyConfig({ plan, setPlan, playlists, isDarkMode, todayDay }) {
     const time = taskInputs[subId]?.time || ''; 
     if (!text || !text.trim()) return;
     
-    setPlan(prev => {
-      const updatedSubs = prev[selectedDay].subjects.map(s => {
-        if(s.id !== subId) return s;
-        return { ...s, tasks: [...(s.tasks||[]), { id: Date.now().toString(), text, time }] };
-      });
-      return { ...prev, [selectedDay]: { ...prev[selectedDay], subjects: updatedSubs } };
+    const updatedSubs = plan[selectedDay].subjects.map(s => {
+      if(s.id !== subId) return s;
+      return { ...s, tasks: [...(s.tasks||[]), { id: Date.now().toString(), text, time }] };
     });
+    const newWeeklyPlan = { ...plan, [selectedDay]: { ...plan[selectedDay], subjects: updatedSubs } };
+    
+    setPlan(newWeeklyPlan);
+    onSync({ weeklyPlan: newWeeklyPlan });
     setTaskInputs(prev => ({ ...prev, [subId]: { text: '', time: '' } }));
   };
 
   const deleteTask = (subId, taskId) => {
-    setPlan(prev => {
-      const updatedSubs = prev[selectedDay].subjects.map(s => {
-        if(s.id !== subId) return s;
-        return { ...s, tasks: s.tasks.filter(t => t.id !== taskId) };
-      });
-      return { ...prev, [selectedDay]: { ...prev[selectedDay], subjects: updatedSubs } };
+    const updatedSubs = plan[selectedDay].subjects.map(s => {
+      if(s.id !== subId) return s;
+      return { ...s, tasks: s.tasks.filter(t => t.id !== taskId) };
     });
+    const newWeeklyPlan = { ...plan, [selectedDay]: { ...plan[selectedDay], subjects: updatedSubs } };
+    
+    setPlan(newWeeklyPlan);
+    onSync({ weeklyPlan: newWeeklyPlan });
   };
 
   const linkTypes = [
@@ -946,9 +985,10 @@ function WeeklyConfig({ plan, setPlan, playlists, isDarkMode, todayDay }) {
   );
 }
 
+
 // ==========================================
 // MONTHLY CONFIG 
-function MonthlyConfig({ events, setEvents, todayDateStr, isDarkMode }) {
+function MonthlyConfig({ events, setEvents, todayDateStr, isDarkMode, onSync }) {
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
@@ -963,14 +1003,28 @@ function MonthlyConfig({ events, setEvents, todayDateStr, isDarkMode }) {
 
   const handleAddEvent = () => {
     if(!selectedDate || !formTitle.trim()) return;
+    
     const newEvent = { id: Date.now().toString(), title: formTitle, time: formTime };
-    setEvents(prev => ({ ...prev, [selectedDate]: [...(prev[selectedDate] || []), newEvent] }));
+    const newMonthlyEvents = { 
+       ...events, 
+       [selectedDate]: [...(events[selectedDate] || []), newEvent] 
+    };
+    
+    setEvents(newMonthlyEvents);
+    onSync({ monthlyEvents: newMonthlyEvents });
+    
     setFormTitle('');
     setFormTime('');
   };
 
   const handleDeleteEvent = (date, id) => {
-    setEvents(prev => ({ ...prev, [date]: prev[date].filter(e => e.id !== id) }));
+    const newMonthlyEvents = { 
+       ...events, 
+       [date]: events[date].filter(e => e.id !== id) 
+    };
+    
+    setEvents(newMonthlyEvents);
+    onSync({ monthlyEvents: newMonthlyEvents });
   };
 
   const selectedDateEvents = events[selectedDate] || [];

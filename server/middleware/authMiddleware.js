@@ -1,4 +1,3 @@
-// server/middleware/authMiddleware.js
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
@@ -7,7 +6,7 @@ const protect = async (req, res, next) => {
 
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     try {
-      // Split "Bearer <token>" and take the index 1
+      // FIX: Grab the second element which is the actual token string
       token = req.headers.authorization.split(' ')[1];
 
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -15,7 +14,7 @@ const protect = async (req, res, next) => {
       req.user = await User.findById(decoded.id).select('-password');
       next();
     } catch (error) {
-      console.error(error);
+      console.error("Token Verification Failed:", error.message);
       res.status(401).json({ message: 'Not authorized, token failed' });
     }
   }

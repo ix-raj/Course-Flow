@@ -26,6 +26,7 @@ export const openDirectory = async () => {
   }
 };
 
+
 /**
  * 2. Scan Directory
  * Recursively walks through the directory handle to find files.
