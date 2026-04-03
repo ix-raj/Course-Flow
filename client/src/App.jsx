@@ -148,8 +148,15 @@ function AppContent() {
   };
 
   const handleUpdatePlaylist = async (id, updates) => {
-    setPlaylists(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
-    setEditingPlaylist(null);
+    try {
+      await api.put(`/courses/${id}`, updates);
+      
+      setPlaylists(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
+      setEditingPlaylist(null);
+    } catch (err) {
+      console.error("Failed to update course in cloud", err);
+      alert("Failed to save changes. The image might be too large.");
+    }
   };
 
   const handleDeletePlaylist = async (playlistId) => {

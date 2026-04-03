@@ -53,4 +53,30 @@ router.delete('/:id', protect, async (req, res) => {
   }
 });
 
+// @route   PUT /api/courses/:id
+// @desc    Update a course (title, description, cover)
+router.put('/:id', protect, async (req, res) => {
+  try {
+    const { title, description, cover } = req.body;
+    
+    // Find the course and make sure the logged-in user owns it
+    let course = await Course.findById(req.params.id);
+    if (!course) return res.status(404).json({ message: 'Course not found' });
+    if (course.user.toString() !== req.user._id.toString()) {
+      return res.status(401).json({ message: 'Not authorized' });
+    }
+
+    // Update the course
+    course = await Course.findByIdAndUpdate(
+      req.params.id,
+      { $set: { title, description, cover } },
+      { new: true }
+    );
+
+    res.json(course);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to update course' });
+  }
+});
+
 module.exports = router;
