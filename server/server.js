@@ -15,6 +15,8 @@ app.use(cors({
     'http://localhost:5173','http://localhost:5174', //  local frontend
      'https://course-flow-psi.vercel.app'  //vercel
   ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], 
+  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
 app.use(express.json());
