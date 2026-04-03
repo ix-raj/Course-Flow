@@ -40,8 +40,6 @@ export default function GoalsPage({ playlists, userData, isDarkMode, setIsDarkMo
   // Floating Elements
   const [reminderPopup, setReminderPopup] = useState(null);
 
-  const tabs = ['daily', 'weekly', 'monthly'];
-
   // --- CENTRALIZED DATE LOGIC ---
   const todayDay = getTodayDay();
   const todayDateStr = getTodayDateStr();
@@ -82,7 +80,7 @@ export default function GoalsPage({ playlists, userData, isDarkMode, setIsDarkMo
         }
     };
     loadProductivity();
-}, []);
+}, [api]);
 
   // Notifications
   useEffect(() => {
