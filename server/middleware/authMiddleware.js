@@ -6,21 +6,29 @@ const protect = async (req, res, next) => {
 
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     try {
-      // FIX: Grab the second element which is the actual token string
-      token = req.headers.authorization.split(' ')[1];
-
+      token = req.headers.authorization.split(' ');
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      req.user = await User.findById(decoded.id).select('-password');
-      next();
+      // Find the user in the database
+      const currentUser = await User.findById(decoded.id).select('-password');
+
+      // 🚨 CRITICAL FIX: If the DB was cleared but the browser still has a token, block it!
+      if (!currentUser) {
+        return res.status(401).json({ message: 'User no longer exists. Please log out and log in again.' });
+      }
+
+      // Attach valid user to request and proceed
+      req.user = currentUser;
+      return next(); 
+
     } catch (error) {
       console.error("Token Verification Failed:", error.message);
-      res.status(401).json({ message: 'Not authorized, token failed' });
+      return res.status(401).json({ message: 'Not authorized, token failed' });
     }
   }
 
   if (!token) {
-    res.status(401).json({ message: 'Not authorized, no token' });
+    return res.status(401).json({ message: 'Not authorized, no token' });
   }
 };
 
