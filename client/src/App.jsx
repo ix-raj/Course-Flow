@@ -93,6 +93,7 @@ function AppContent() {
 
   useEffect(() => {
     if (!user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPlaylists([]);
       setUserData({});
       return;
