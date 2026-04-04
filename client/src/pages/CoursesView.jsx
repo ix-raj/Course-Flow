@@ -10,7 +10,7 @@ import { CourseCard } from '../components/ui/CourseCard';
 import { Header } from '../components/ui/Header';
 
 export default function CoursesView({ 
-  playlists, onOpen, onAdd, onDelete, onEdit, isDarkMode, setIsDarkMode, userData = {} 
+  playlists, isLoading = false, onOpen, onAdd, onDelete, onEdit, isDarkMode, setIsDarkMode, userData = {} 
 }) {
   
   // --- STATE: UI CONTROLS ---
@@ -194,7 +194,25 @@ export default function CoursesView({
           </div>
 
           {/* 3. GRID SYSTEM */}
-          {filteredAndSortedPlaylists.length === 0 ? (
+          {isLoading && filteredAndSortedPlaylists.length === 0 ? (
+            <div className={`grid ${getGridClass()} gap-5 pb-20`}>
+              {Array.from({ length: 8 }).map((_, index) => (
+                <div
+                  key={index}
+                  className={`rounded-2xl overflow-hidden border animate-pulse ${
+                    isDarkMode ? 'bg-[#1E293B] border-white/10' : 'bg-white border-slate-200'
+                  }`}
+                >
+                  <div className={`aspect-video w-full ${isDarkMode ? 'bg-slate-800' : 'bg-slate-200'}`} />
+                  <div className="p-5 space-y-3">
+                    <div className={`h-4 w-3/4 rounded ${isDarkMode ? 'bg-slate-700' : 'bg-slate-200'}`} />
+                    <div className={`h-3 w-1/2 rounded ${isDarkMode ? 'bg-slate-800' : 'bg-slate-100'}`} />
+                    <div className={`h-2 w-full rounded ${isDarkMode ? 'bg-slate-800' : 'bg-slate-100'}`} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : filteredAndSortedPlaylists.length === 0 ? (
             <div className={`text-center py-24 rounded-3xl border-2 border-dashed flex flex-col items-center justify-center transition-colors
                ${isDarkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-slate-200'}`}>
               <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mb-6 ${isDarkMode ? 'bg-slate-900' : 'bg-slate-50'}`}>

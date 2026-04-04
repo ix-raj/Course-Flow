@@ -8,7 +8,7 @@ const { protect } = require('../middleware/authMiddleware');
 // @route   GET /api/courses
 router.get('/', protect, async (req, res) => {
   try {
-    const courses = await Course.find({ user: req.user._id }).sort({ createdAt: -1 });
+    const courses = await Course.find({ user: req.user._id }).sort({ createdAt: -1 }).lean();
     res.json(courses);
   } catch (error) {
     res.status(500).json({ message: 'Server Error' });

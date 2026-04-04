@@ -7,7 +7,7 @@ const { protect } = require('../middleware/authMiddleware');
 // @route   GET /api/workspace
 router.get('/', protect, async (req, res) => {
   try {
-    const workspaces = await Workspace.find({ user: req.user._id });
+    const workspaces = await Workspace.find({ user: req.user._id }).lean();
     res.json(workspaces);
   } catch (error) {
     res.status(500).json({ message: 'Server Error' });

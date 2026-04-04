@@ -14,6 +14,20 @@ import EditPlaylistModal from './components/modals/EditPlaylistModal';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
+const getCoursesCacheKey = (userId) => `courseflow_courses_${userId}`;
+
+const readCachedCourses = (userId) => {
+  if (!userId) return [];
+
+  try {
+    const cached = localStorage.getItem(getCoursesCacheKey(userId));
+    return cached ? JSON.parse(cached) : [];
+  } catch (error) {
+    console.error("Failed to read cached courses", error);
+    return [];
+  }
+};
+
 
 function CourseRoute({ 
   playlists, sessionFiles, setSessionFiles, userData, 
@@ -68,6 +82,7 @@ function AppContent() {
     completionLog: {},
     monthlyEvents: {}
   });
+  const [coursesLoading, setCoursesLoading] = useState(false);
 
   const defaultFileData = {
     notes: [],
@@ -119,7 +134,6 @@ function AppContent() {
 
   useEffect(() => {
     if (!user) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPlaylists([]);
       setUserData({});
       setProductivityData({
@@ -127,19 +141,35 @@ function AppContent() {
         completionLog: {},
         monthlyEvents: {}
       });
+      setCoursesLoading(false);
       return;
     }
 
+    const cachedCourses = readCachedCourses(user._id);
+    if (cachedCourses.length > 0) {
+      setPlaylists(cachedCourses);
+    }
+
+    const fetchCourses = async () => {
+      setCoursesLoading(true);
+      try {
+        const courseRes = await api.get('/courses');
+        const cloudPlaylists = courseRes.data.map(c => ({ ...c, id: c._id }));
+        setPlaylists(cloudPlaylists);
+        localStorage.setItem(getCoursesCacheKey(user._id), JSON.stringify(cloudPlaylists));
+      } catch (error) {
+        console.error("Failed to fetch courses", error);
+      } finally {
+        setCoursesLoading(false);
+      }
+    };
+
     const fetchWorkspaceData = async () => {
       try {
-        const [courseRes, workspaceRes, productivityRes] = await Promise.all([
-          api.get('/courses'),
+        const [workspaceRes, productivityRes] = await Promise.all([
           api.get('/workspace'),
           api.get('/productivity')
         ]);
-
-        const cloudPlaylists = courseRes.data.map(c => ({ ...c, id: c._id }));
-        setPlaylists(cloudPlaylists);
 
         const cloudUserData = {};
         workspaceRes.data.forEach(ws => {
@@ -165,12 +195,25 @@ function AppContent() {
         });
 
       } catch (error) {
-        console.error("Failed to sync with cloud database", error);
+        console.error("Failed to sync workspace data", error);
       }
     };
 
+    fetchCourses();
     fetchWorkspaceData();
   }, [user, api]);
+
+  useEffect(() => {
+    if (!user?._id) return;
+
+    try {
+      localStorage.setItem(getCoursesCacheKey(user._id), JSON.stringify(
+        playlists.filter(playlist => !String(playlist.id || '').startsWith('temp-'))
+      ));
+    } catch (error) {
+      console.error("Failed to cache courses", error);
+    }
+  }, [playlists, user]);
 
 
   const requireAuth = (actionCallback) => {
@@ -538,7 +581,7 @@ function AppContent() {
         
         <Route path="/" element={<LandingPage playlists={playlists || []} onViewCourses={() => navigate('/library')} onOpen={(id) => navigate(`/course/${id}`)} userData={userData || {}} productivityData={productivityData} onHome={() => navigate('/')} onAdd={handleOpenAddModal} onDelete={handleDeletePlaylist} onEdit={handleEditClick} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode}/>} />
         
-        <Route path="/library" element={<CoursesView playlists={playlists || []} onOpen={(id) => navigate(`/course/${id}`)} onAdd={handleOpenAddModal} onHome={() => navigate('/')} onDelete={handleDeletePlaylist} onEdit={handleEditClick} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} userData={userData} onViewCourses={() => navigate('/library')}/>} />
+        <Route path="/library" element={<CoursesView playlists={playlists || []} isLoading={coursesLoading} onOpen={(id) => navigate(`/course/${id}`)} onAdd={handleOpenAddModal} onHome={() => navigate('/')} onDelete={handleDeletePlaylist} onEdit={handleEditClick} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} userData={userData} onViewCourses={() => navigate('/library')}/>} />
 
         <Route path="/course/:id" element={<CourseRoute playlists={playlists} sessionFiles={sessionFiles} setSessionFiles={setSessionFiles} userData={userData} updateFileTime={updateFileTime} toggleFileCompletion={toggleFileCompletion} addEntry={addEntry} removeEntry={removeEntry} toggleTask={toggleTask} updateDoubtAnswer={updateDoubtAnswer} updateCourseMeta={updateCourseMeta} updateCourseLinks={updateCourseLinks} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} navigate={navigate}/>} />
         
