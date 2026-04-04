@@ -35,6 +35,26 @@ export default function LocalVideoPlayer({
   const controlsTimeoutRef = useRef(null);
   const clickTimer = useRef(null);
 
+  const inferMimeType = useCallback((inputFile) => {
+    if (!inputFile?.name) return inputFile?.type || '';
+
+    const extension = inputFile.name.split('.').pop()?.toLowerCase();
+    const mimeMap = {
+      mp4: 'video/mp4',
+      m4v: 'video/mp4',
+      webm: 'video/webm',
+      ogg: 'video/ogg',
+      ogv: 'video/ogg',
+      mov: 'video/quicktime',
+      avi: 'video/x-msvideo',
+      wmv: 'video/x-ms-wmv',
+      mkv: 'video/x-matroska',
+      vtt: 'text/vtt'
+    };
+
+    return inputFile.type || mimeMap[extension] || '';
+  }, []);
+
   useEffect(() => {
     let vUrl = null;
     let sUrl = null;
@@ -42,7 +62,16 @@ export default function LocalVideoPlayer({
     if (file) {
       try {
         if (file instanceof Blob || file instanceof File) {
-          vUrl = URL.createObjectURL(file);
+          const normalizedVideoFile = !file.type && file instanceof File
+            ? new File([file], file.name, {
+                type: inferMimeType(file),
+                lastModified: file.lastModified
+              })
+            : !file.type && file instanceof Blob
+              ? file.slice(0, file.size, inferMimeType(file))
+              : file;
+
+          vUrl = URL.createObjectURL(normalizedVideoFile);
           setVideoUrl(vUrl);
           setVideoError(false);
         } else if (file.url) {
@@ -58,7 +87,16 @@ export default function LocalVideoPlayer({
         setHasSetInitialTime(false);
 
         if (subtitleFile && (subtitleFile instanceof Blob || subtitleFile instanceof File)) {
-          sUrl = URL.createObjectURL(subtitleFile);
+          const normalizedSubtitleFile = !subtitleFile.type && subtitleFile instanceof File
+            ? new File([subtitleFile], subtitleFile.name, {
+                type: inferMimeType(subtitleFile),
+                lastModified: subtitleFile.lastModified
+              })
+            : !subtitleFile.type && subtitleFile instanceof Blob
+              ? subtitleFile.slice(0, subtitleFile.size, inferMimeType(subtitleFile))
+              : subtitleFile;
+
+          sUrl = URL.createObjectURL(normalizedSubtitleFile);
           setSubUrl(sUrl);
         } else {
           setSubUrl(null);
@@ -73,7 +111,7 @@ export default function LocalVideoPlayer({
       if (vUrl && vUrl.startsWith('blob:')) URL.revokeObjectURL(vUrl);
       if (sUrl && sUrl.startsWith('blob:')) URL.revokeObjectURL(sUrl);
     };
-  }, [file, subtitleFile]);
+  }, [file, inferMimeType, subtitleFile]);
 
   const handleLoadedMetadata = () => {
     if (videoRef.current && initialTime > 0 && !hasSetInitialTime) {
@@ -210,9 +248,9 @@ export default function LocalVideoPlayer({
 
   if (videoError) return (
     <div className="w-full aspect-video bg-slate-900 flex flex-col items-center justify-center p-8 text-center border border-slate-800 rounded-3xl shadow-xl">
-      <div className="bg-red-500/20 p-4 rounded-full mb-4"><AlertTriangle className="h-8 w-8 text-red-500" /></div>
+      <div className="bg-red-500/20 p-4 rounded-full mb-4  "><AlertTriangle className="h-8 w-8 text-red-400" /></div>
       <h3 className="text-xl font-bold text-white mb-2">Playback Error</h3>
-      <p className="text-slate-400 max-w-md mb-6">Cannot play this file. It may be an unsupported format (like MKV/HEVC) or corrupted.</p>
+      <p className="text-slate-400 max-w-md mb-6">Cannot play this file. It may be an unsupported format or corrupted.</p>
     </div>
   );
 
@@ -236,7 +274,6 @@ export default function LocalVideoPlayer({
              <video 
                ref={videoRef} 
                key={videoUrl} 
-               src={videoUrl} 
                autoPlay
                className="w-full h-full object-contain bg-black cursor-pointer" 
                onClick={handleSingleClick}
@@ -246,6 +283,7 @@ export default function LocalVideoPlayer({
                onEnded={() => { setIsPlaying(false); onEnded(); }} 
                onError={() => setVideoError(true)}
              >
+               {videoUrl && <source src={videoUrl} type={inferMimeType(file)} />}
                {subUrl && <track kind="subtitles" src={subUrl} srcLang="en" label="English" default />}
              </video>
 
