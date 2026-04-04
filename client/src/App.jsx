@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate, useParams, Navigate } from 'react-router-dom';
 
 // --- PAGES & COMPONENTS ---
@@ -83,6 +83,7 @@ function AppContent() {
     monthlyEvents: {}
   });
   const [coursesLoading, setCoursesLoading] = useState(false);
+  const hydratedThemeForUserRef = useRef(null);
 
   const defaultFileData = {
     notes: [],
@@ -115,15 +116,23 @@ function AppContent() {
     return () => document.head.removeChild(link);
   }, []);
 
-  // Add this effect to sync theme changes to the user's cloud profile
   useEffect(() => {
-    if (user?.preferences && typeof user.preferences.isDarkMode === 'boolean') {
+    if (!user?._id) {
+      hydratedThemeForUserRef.current = null;
+      return;
+    }
+
+    if (
+      hydratedThemeForUserRef.current !== user._id &&
+      typeof user.preferences?.isDarkMode === 'boolean'
+    ) {
       setIsDarkMode(user.preferences.isDarkMode);
+      hydratedThemeForUserRef.current = user._id;
     }
   }, [user, setIsDarkMode]);
 
   useEffect(() => {
-    if (user) {
+    if (user?._id && hydratedThemeForUserRef.current === user._id) {
       api.put('/auth/preferences', { isDarkMode }).catch(err => 
         console.error("Failed to sync theme to cloud", err)
       );

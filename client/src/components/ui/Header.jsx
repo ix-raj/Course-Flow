@@ -78,7 +78,7 @@ export function Header({ isDarkMode, setIsDarkMode, activePage, positionClass = 
            <div className="flex items-center gap-4">
 
              {/* Theme Toggle */}
-             <button onClick={() => setIsDarkMode(!isDarkMode)}
+             <button onClick={() => setIsDarkMode(prev => !prev)}
                   className={` w-16 h-9 flex items-center rounded-full p-1 transition-all duration-300 border ${isDarkMode  ? 'bg-[#111822] border-slate-700/60' : 'bg-slate-100 border-slate-300'} `} >
                   <div className={`w-7 h-7 flex items-center justify-center rounded-full transform transition-all duration-300shadow-md bg-slate-800 text-white  ${isDarkMode ? 'translate-x-0' : 'translate-x-7'} `} >
                     {isDarkMode ? (
