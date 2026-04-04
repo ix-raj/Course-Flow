@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   Play, Pause, Volume2, VolumeX, Gauge, 
   Maximize, Minimize, PictureInPicture2, 
@@ -92,23 +92,6 @@ export default function LocalVideoPlayer({
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
-      switch(e.key.toLowerCase()) {
-        case ' ': e.preventDefault(); handlePlayPause(); break;
-        case 'arrowright': skipTime(5); break;
-        case 'arrowleft': skipTime(-5); break;
-        case 'm': toggleMute(); break;
-        case 'f': toggleFullscreen(); break;
-        case 'p': togglePiP(); break;
-        case 'escape': if (isFakeFullscreen) setIsFakeFullscreen(false); if (document.fullscreenElement) document.exitFullscreen().catch(()=>{}); break;
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isPlaying, isMuted, isFakeFullscreen, volume]);
-
   const handleMouseMove = () => {
     setShowControls(true);
     if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
@@ -147,7 +130,7 @@ export default function LocalVideoPlayer({
     if (videoRef.current) { videoRef.current.volume = vol; videoRef.current.muted = vol === 0; }
   };
 
-  const toggleMute = () => {
+  const toggleMute = useCallback(() => {
     const newMuteState = !isMuted;
     setIsMuted(newMuteState);
     if (videoRef.current) {
@@ -157,9 +140,9 @@ export default function LocalVideoPlayer({
             videoRef.current.volume = 1.0;
         }
     }
-  };
+  }, [isMuted, volume]);
 
-  const toggleFullscreen = () => {
+  const toggleFullscreen = useCallback(() => {
     const container = containerRef.current;
     if (!document.fullscreenElement && !isFakeFullscreen) {
         container.requestFullscreen().catch(() => setIsFakeFullscreen(true));
@@ -167,7 +150,24 @@ export default function LocalVideoPlayer({
         if (document.fullscreenElement) document.exitFullscreen().catch(()=>{});
         setIsFakeFullscreen(false);
     }
-  };
+  }, [isFakeFullscreen]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+      switch(e.key.toLowerCase()) {
+        case ' ': e.preventDefault(); handlePlayPause(); break;
+        case 'arrowright': skipTime(5); break;
+        case 'arrowleft': skipTime(-5); break;
+        case 'm': toggleMute(); break;
+        case 'f': toggleFullscreen(); break;
+        case 'p': togglePiP(); break;
+        case 'escape': if (isFakeFullscreen) setIsFakeFullscreen(false); if (document.fullscreenElement) document.exitFullscreen().catch(()=>{}); break;
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFakeFullscreen, toggleFullscreen, toggleMute]);
 
   const togglePiP = async () => {
     try {

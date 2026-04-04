@@ -63,7 +63,7 @@ export default function GoalsPage({ playlists, userData, isDarkMode, setIsDarkMo
           }
       });
       return events.sort((a, b) => a.date.localeCompare(b.date));
-  }, [monthlyEvents, todayDateStr, tenDaysStr]);
+  }, [monthlyEvents, tenDaysStr]);
 
   useEffect(() => {
     const loadProductivity = async () => {
@@ -109,26 +109,18 @@ export default function GoalsPage({ playlists, userData, isDarkMode, setIsDarkMo
 
   // Tick Checkbox Handler
   const handleToggleTask = (day, subjectId, taskId) => {
-      setWeeklyPlan(prev => {
-          const updatedPlan = {
-              ...prev,
-              [day]: {
-                  ...prev[day],
-                  subjects: (prev[day]?.subjects || []).map(s => {
-                      if (s.id !== subjectId) return s;
-                      return {
-                          ...s,
-                          tasks: (s.tasks || []).map(t =>
-                              t.id === taskId ? { ...t, done: !t.done } : t
-                          )
-                      };
-                  })
-              }
-          };
+      setCompletionLog(prev => {
+          const logKey = `${todayDateStr}_${taskId}`;
+          const updatedLog = { ...prev };
 
-          // Sync the entire updated plan to the cloud
-          onSync({ weeklyPlan: updatedPlan });
-          return updatedPlan;
+          if (updatedLog[logKey]) {
+              delete updatedLog[logKey];
+          } else {
+              updatedLog[logKey] = true;
+          }
+
+          onSync({ completionLog: updatedLog });
+          return updatedLog;
       });
   };
 

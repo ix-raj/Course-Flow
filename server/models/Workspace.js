@@ -10,6 +10,12 @@ const workspaceSchema = new mongoose.Schema({
     text: String, 
     done: { type: Boolean, default: false } 
   }],
+
+  courseMeta: {
+    courseNotes: { type: String, default: '' },
+    notionUrl: { type: String, default: '' },
+    revisionList: [{ type: String }]
+  },
   
   videoProgress: {
     type: Map,

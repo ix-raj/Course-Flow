@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -9,33 +10,29 @@ export default function AuthPage({ isDarkMode, setIsDarkMode }) {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   
-  const { login, register, error, setError } = useAuth();
+  const { login, register, error, setError, loading } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isLoading) return; 
+    if (loading) return; 
     setError(""); 
-      try {
-        setIsLoading(true); 
-        if (password.length < 6) {
-          throw new Error("Password must be at least 6 characters");
-        }
-
-        const success = isLogin 
-          ? await login(email, password) 
-          : await register(email, password);
-
-        if (success) {
-          navigate('/', { replace: true }); 
-        }
-      } catch (err) {
-        setError(err.response?.data?.message || err.message || "Authentication failed");
-      } finally {
-        setIsLoading(false);
+    try {
+      if (password.length < 6) {
+        throw new Error("Password must be at least 6 characters");
       }
+
+      const success = isLogin 
+        ? await login(email, password) 
+        : await register(email, password);
+
+      if (success) {
+        navigate('/', { replace: true }); 
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || "Authentication failed");
+    }
   };
 
   const toggleMode = () => {
@@ -170,7 +167,7 @@ export default function AuthPage({ isDarkMode, setIsDarkMode }) {
                 <div className="relative group">
                   <Mail className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${isDarkMode ? 'text-slate-500 group-focus-within:text-indigo-400' : 'text-slate-400 group-focus-within:text-indigo-500'}`} />
                   <input 
-                    type="email" required value={email} onChange={(e) => setEmail(e.target.value)} disabled={isLoading} autoComplete="email"  
+                    type="email" required value={email} onChange={(e) => setEmail(e.target.value)} disabled={loading} autoComplete="email"  
                     placeholder="Email address"
                     className={`w-full pl-10 pr-4 py-3 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all border ${isDarkMode ? 'bg-[#0F172A]/50 border-white/5 text-white placeholder:text-slate-500' : 'bg-white/80 border-slate-200 text-slate-900 placeholder:text-slate-400'}`}
                   />
@@ -181,7 +178,7 @@ export default function AuthPage({ isDarkMode, setIsDarkMode }) {
                 <div className="relative group">
                   <Lock className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${isDarkMode ? 'text-slate-500 group-focus-within:text-indigo-400' : 'text-slate-400 group-focus-within:text-indigo-500'}`} />
                   <input 
-                    type="password" value={password} onChange={(e) => setPassword(e.target.value)} disabled={isLoading}  autoComplete={isLogin ? "current-password" : "new-password"} required
+                    type="password" value={password} onChange={(e) => setPassword(e.target.value)} disabled={loading}  autoComplete={isLogin ? "current-password" : "new-password"} required
                     placeholder="Password"
                     className={`w-full pl-10 pr-4 py-3 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all border ${isDarkMode ? 'bg-[#0F172A]/50 border-white/5 text-white placeholder:text-slate-500' : 'bg-white/80 border-slate-200 text-slate-900 placeholder:text-slate-400'}`}
                   />
@@ -191,11 +188,20 @@ export default function AuthPage({ isDarkMode, setIsDarkMode }) {
               <motion.button 
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                type="submit" disabled={isLoading}
+                type="submit" disabled={loading}
                 className={`w-full mt-2 py-3 rounded-xl font-black text-sm transition-all disabled:opacity-70 flex items-center justify-center gap-2 group ${isDarkMode ? 'bg-indigo-500 text-white hover:bg-indigo-400' : 'bg-indigo-600 text-white hover:bg-indigo-500'}`}
               >
-                {isLoading ? 'Processing...' : (isLogin ? 'Sign In' : 'Start journey')}
-                {!isLoading && <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />}
+                {loading ? (
+                  <>
+                    <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                    <span>{isLogin ? 'Logging in...' : 'Creating account...'}</span>
+                  </>
+                ) : (
+                  <>
+                    <span>{isLogin ? 'Sign In' : 'Start journey'}</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
               </motion.button>
             </form>
           </div>

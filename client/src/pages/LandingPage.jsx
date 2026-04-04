@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -64,17 +65,17 @@ const DashboardCourseCard = ({ playlist, onClick, userData, isDarkMode }) => {
 };
 
 // INLINE COMPONENT: FEATURE CARD
-const FeatureCard = ({ icon: Icon, colorClass, bgClass, title, desc, isDarkMode }) => (
+const FeatureCard = ({ icon: IconComponent, colorClass, bgClass, title, desc, isDarkMode }) => (
   <div className={`p-6 rounded-2xl border transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-md ${isDarkMode ? 'bg-[#1E293B] border-white/10' : 'bg-blue-400/20 border-slate-200 shadow-sm'}`}>
     <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-5 ${bgClass}`}>
-      <Icon className={`w-6 h-6 ${colorClass}`} />
+      <IconComponent className={`w-6 h-6 ${colorClass}`} />
     </div>
     <h3 className={`text-lg font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{title}</h3>
     <p className={`text-sm leading-relaxed ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{desc}</p>
   </div>
 );
 
-export default function LandingPage({ playlists, onViewCourses, onOpen, userData, onAdd, isDarkMode, setIsDarkMode }) {
+export default function LandingPage({ playlists, onViewCourses, onOpen, userData, productivityData, onAdd, isDarkMode, setIsDarkMode }) {
   const totalCourses = playlists.length;
   const navigate = useNavigate();
   
@@ -93,12 +94,10 @@ export default function LandingPage({ playlists, onViewCourses, onOpen, userData
   // Daily Widget Calculations 
   const dailyStats = useMemo(() => {
     try {
-      
       const todayDay = getTodayDay();
       const todayDateStr = getTodayDateStr();
-      
-      const weeklyPlan = JSON.parse(localStorage.getItem('cf_v3_weekly_plan') || '{}');
-      const completionLog = JSON.parse(localStorage.getItem('cf_v3_completion_log') || '{}');
+      const weeklyPlan = productivityData?.weeklyPlan || {};
+      const completionLog = productivityData?.completionLog || {};
       
       const todaysData = weeklyPlan[todayDay] || { subjects: [] };
       const allTodaysTasks = todaysData.subjects.flatMap(s => s.tasks || []);
@@ -106,7 +105,7 @@ export default function LandingPage({ playlists, onViewCourses, onOpen, userData
       
       return { total: allTodaysTasks.length, completed: completedToday };
     } catch { return { total: 0, completed: 0 }; }
-  }, []);
+  }, [productivityData]);
 
   const scrollToCourses = () => {
     const element = document.getElementById('courses-section');

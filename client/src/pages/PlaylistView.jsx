@@ -12,7 +12,7 @@ import LocalVideoPlayer from '../components/player/LocalVideoPlayer';
 // --- UTILITIES ---
 import { calculateCourseProgress } from '../utils/metrics';
 
-export default function PlaylistView({ playlist, files, onBack, onReconnect, userData, onUpdateProgress, onToggleCompletion, onAddEntry, onRemoveEntry, onToggleTask, isDarkMode, setIsDarkMode }) {
+export default function PlaylistView({ playlist, files, onBack, onReconnect, userData, onUpdateProgress, onToggleCompletion, onAddEntry, onRemoveEntry, onToggleTask, onUpdateDoubtAnswer, onUpdateCourseMeta, onUpdateCourseLinks, isDarkMode, setIsDarkMode }) {
   const [activeTab, setActiveTab] = useState('videos'); 
   const [currentFile, setCurrentFile] = useState(null);
   const [isReconnecting, setIsReconnecting] = useState(false);
@@ -33,28 +33,23 @@ export default function PlaylistView({ playlist, files, onBack, onReconnect, use
   const [selectedDoubtVideo, setSelectedDoubtVideo] = useState(null);
   const [isUnlockAll, setIsUnlockAll] = useState(false); 
   const doubtInputRef = useRef(null);
+  const courseMeta = userData['_COURSE_META_'] || {
+    courseNotes: '',
+    notionUrl: '',
+    revisionList: []
+  };
 
   // Notes & Revision State
   const [notesMode, setNotesMode] = useState('local');
-  const [courseNotes, setCourseNotes] = useState(() => localStorage.getItem(`course_notes_${playlist.id}`) || '');
-  const [notionUrl, setNotionUrl] = useState(() => localStorage.getItem(`notion_url_${playlist.id}`) || '');
+  const [courseNotes, setCourseNotes] = useState(() => courseMeta.courseNotes || '');
+  const [notionUrl, setNotionUrl] = useState(() => courseMeta.notionUrl || '');
   
   // NEW: Revision tracking state
-  const [revisionList, setRevisionList] = useState(() => {
-    const saved = localStorage.getItem(`revision_list_${playlist.id}`);
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  // Doubts Answers State
-  const [doubtAnswers, setDoubtAnswers] = useState(() => {
-    const saved = localStorage.getItem(`doubt_answers_${playlist.id}`);
-    return saved ? JSON.parse(saved) : {};
-  });
+  const [revisionList, setRevisionList] = useState(() => courseMeta.revisionList || []);
 
   // Custom Editable Links State
   const [customLinks, setCustomLinks] = useState(() => {
-    const saved = localStorage.getItem(`course_links_${playlist.id}`);
-    return saved ? JSON.parse(saved) : [
+    return playlist.customLinks?.length ? playlist.customLinks : [
       { label: 'A', url: '' },
       { label: 'B', url: '' },
       { label: 'C', url: '' },
@@ -75,16 +70,16 @@ export default function PlaylistView({ playlist, files, onBack, onReconnect, use
        const newLinks = [...customLinks];
        newLinks[index] = { label: newLabel, url: newUrl };
        setCustomLinks(newLinks);
-       localStorage.setItem(`course_links_${playlist.id}`, JSON.stringify(newLinks));
-    }
-  };
+       onUpdateCourseLinks(playlist.id, newLinks);
+     }
+   };
 
   const handleToggleRevision = (fileName) => {
     const newList = revisionList.includes(fileName) 
       ? revisionList.filter(name => name !== fileName)
       : [...revisionList, fileName];
     setRevisionList(newList);
-    localStorage.setItem(`revision_list_${playlist.id}`, JSON.stringify(newList));
+    onUpdateCourseMeta(playlist.id, { revisionList: newList });
   };
   
   const fileList = useMemo(() => files ? Array.from(files) : [], [files]);
@@ -116,9 +111,10 @@ export default function PlaylistView({ playlist, files, onBack, onReconnect, use
   useEffect(() => {
     if (videos.length > 0 && !currentFile) {
        const firstUnfinished = videos.find(v => !userData[v.name]?.completed);
+       // eslint-disable-next-line react-hooks/set-state-in-effect
        setCurrentFile(firstUnfinished || videos[0]);
     }
-  }, [userData, videos]);
+  }, [currentFile, userData, videos]);
 
 
   useEffect(() => {
@@ -135,10 +131,25 @@ export default function PlaylistView({ playlist, files, onBack, onReconnect, use
     }
   }, [currentFile, activeTab]);
 
-  useEffect(() => { localStorage.setItem(`course_notes_${playlist.id}`, courseNotes); }, [courseNotes, playlist.id]);
-  useEffect(() => { localStorage.setItem(`notion_url_${playlist.id}`, notionUrl); }, [notionUrl, playlist.id]);
-  useEffect(() => { localStorage.setItem(`doubt_answers_${playlist.id}`, JSON.stringify(doubtAnswers)); }, [doubtAnswers, playlist.id]);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (courseNotes !== courseMeta.courseNotes) {
+        onUpdateCourseMeta(playlist.id, { courseNotes });
+      }
+    }, 400);
 
+    return () => clearTimeout(handler);
+  }, [courseNotes, courseMeta.courseNotes, onUpdateCourseMeta, playlist.id]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (notionUrl !== courseMeta.notionUrl) {
+        onUpdateCourseMeta(playlist.id, { notionUrl });
+      }
+    }, 400);
+
+    return () => clearTimeout(handler);
+  }, [notionUrl, courseMeta.notionUrl, onUpdateCourseMeta, playlist.id]);
   const handleQuickReconnect = async () => {
     setIsReconnecting(true);
     let handle = await restoreHandle(playlist.folderName);
@@ -165,7 +176,17 @@ export default function PlaylistView({ playlist, files, onBack, onReconnect, use
   };
 
   const handleSaveAnswer = (vidName, idx, text) => {
-    setDoubtAnswers(prev => ({ ...prev, [vidName]: { ...(prev[vidName] || {}), [idx]: text } }));
+    onUpdateDoubtAnswer(playlist.id, vidName, idx, text);
+  };
+
+  const getDoubtQuestion = (doubt) => {
+    if (typeof doubt === 'string') return doubt;
+    return doubt?.question || '';
+  };
+
+  const getDoubtAnswer = (doubt) => {
+    if (typeof doubt === 'string') return '';
+    return doubt?.answer || '';
   };
 
   if (!files || fileList.length === 0) {
@@ -617,14 +638,15 @@ export default function PlaylistView({ playlist, files, onBack, onReconnect, use
                            {(!userData[selectedDoubtVideo]?.doubts || userData[selectedDoubtVideo].doubts.length === 0) && (
                               <p className="text-center text-slate-500 text-sm font-medium py-10">No doubts recorded for this lesson yet.</p>
                            )}
-                           {(userData[selectedDoubtVideo]?.doubts || []).map((text, idx) => {
-                              const ans = (doubtAnswers[selectedDoubtVideo] || {})[idx] || '';
+                           {(userData[selectedDoubtVideo]?.doubts || []).map((doubt, idx) => {
+                              const question = getDoubtQuestion(doubt);
+                              const ans = getDoubtAnswer(doubt);
                               return (
                                 <div key={idx} className={`p-4 rounded-xl border ${isDarkMode ? 'bg-[#0F172A] border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
                                    <div className="flex justify-between items-start gap-4 mb-3">
                                       <div className="flex gap-2.5 items-start">
                                          <MessageCircleQuestion className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
-                                         <p className={`text-sm font-medium ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>{text}</p>
+                                         <p className={`text-sm font-medium ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>{question}</p>
                                       </div>
                                       <button onClick={() => onRemoveEntry(playlist.id, selectedDoubtVideo, 'doubts', idx)} className="text-slate-500 hover:text-red-500 transition-colors p-1"><Trash2 className="w-4 h-4" /></button>
                                    </div>

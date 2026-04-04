@@ -17,7 +17,8 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 
 function CourseRoute({ 
   playlists, sessionFiles, setSessionFiles, userData, 
-  updateFileTime, toggleFileCompletion, addEntry, removeEntry, toggleTask, 
+  updateFileTime, toggleFileCompletion, addEntry, removeEntry, toggleTask, updateDoubtAnswer,
+  updateCourseMeta, updateCourseLinks,
   isDarkMode, setIsDarkMode, navigate 
 }) {
   const { id } = useParams();
@@ -37,6 +38,9 @@ function CourseRoute({
       onAddEntry={addEntry}
       onRemoveEntry={removeEntry}
       onToggleTask={toggleTask}
+      onUpdateDoubtAnswer={updateDoubtAnswer}
+      onUpdateCourseMeta={updateCourseMeta}
+      onUpdateCourseLinks={updateCourseLinks}
       onHome={() => navigate('/')}
       isDarkMode={isDarkMode}
       setIsDarkMode={setIsDarkMode}
@@ -47,7 +51,7 @@ function CourseRoute({
 
 function AppContent() {
   const navigate = useNavigate();
-  const { user, api, loading } = useAuth(); // Access auth state and database API
+  const { user, api } = useAuth(); // Access auth state and database API
   
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingPlaylist, setEditingPlaylist] = useState(null);
@@ -59,11 +63,27 @@ function AppContent() {
   // Cloud Data States
   const [playlists, setPlaylists] = useState([]);
   const [userData, setUserData] = useState({});
+  const [productivityData, setProductivityData] = useState({
+    weeklyPlan: {},
+    completionLog: {},
+    monthlyEvents: {}
+  });
+
+  const defaultFileData = {
+    notes: [],
+    doubts: [],
+    tasks: [],
+    completed: false
+  };
 
   const updateProductivity = async (updates) => {
     try {
-      // This calls the PUT /api/productivity route built in Phase 3
       const { data } = await api.put('/productivity', updates);
+      setProductivityData(prev => ({
+        weeklyPlan: data.weeklyPlan || prev.weeklyPlan,
+        completionLog: data.completionLog || prev.completionLog,
+        monthlyEvents: data.monthlyEvents || prev.monthlyEvents
+      }));
       return data;
     } catch (err) {
       console.error("Failed to sync productivity data", err);
@@ -82,6 +102,12 @@ function AppContent() {
 
   // Add this effect to sync theme changes to the user's cloud profile
   useEffect(() => {
+    if (user?.preferences && typeof user.preferences.isDarkMode === 'boolean') {
+      setIsDarkMode(user.preferences.isDarkMode);
+    }
+  }, [user, setIsDarkMode]);
+
+  useEffect(() => {
     if (user) {
       api.put('/auth/preferences', { isDarkMode }).catch(err => 
         console.error("Failed to sync theme to cloud", err)
@@ -96,14 +122,20 @@ function AppContent() {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setPlaylists([]);
       setUserData({});
+      setProductivityData({
+        weeklyPlan: {},
+        completionLog: {},
+        monthlyEvents: {}
+      });
       return;
     }
 
     const fetchWorkspaceData = async () => {
       try {
-        const [courseRes, workspaceRes] = await Promise.all([
+        const [courseRes, workspaceRes, productivityRes] = await Promise.all([
           api.get('/courses'),
-          api.get('/workspace')
+          api.get('/workspace'),
+          api.get('/productivity')
         ]);
 
         const cloudPlaylists = courseRes.data.map(c => ({ ...c, id: c._id }));
@@ -112,7 +144,12 @@ function AppContent() {
         const cloudUserData = {};
         workspaceRes.data.forEach(ws => {
            cloudUserData[ws.course] = {
-              _COURSE_GOALS_: { tasks: ws.courseGoals || [] }
+              _COURSE_GOALS_: { tasks: ws.courseGoals || [] },
+              _COURSE_META_: {
+                courseNotes: ws.courseMeta?.courseNotes || '',
+                notionUrl: ws.courseMeta?.notionUrl || '',
+                revisionList: ws.courseMeta?.revisionList || []
+              }
            };
            if (ws.videoProgress) {
               Object.keys(ws.videoProgress).forEach(key => {
@@ -121,6 +158,11 @@ function AppContent() {
            }
         });
         setUserData(cloudUserData);
+        setProductivityData({
+          weeklyPlan: productivityRes.data?.weeklyPlan || {},
+          completionLog: productivityRes.data?.completionLog || {},
+          monthlyEvents: productivityRes.data?.monthlyEvents || {}
+        });
 
       } catch (error) {
         console.error("Failed to sync with cloud database", error);
@@ -207,78 +249,228 @@ function AppContent() {
 
   // 1. Unified Entry Sync (Covers Notes, Doubts, and Video-Specific Tasks)
   const addEntry = async (playlistId, fileName, type, content) => { 
+    let updatedEntries = [];
+
     setUserData(prev => { 
       const plData = prev[playlistId] || {}; 
-      const fileData = plData[fileName] || { notes: [], doubts: [], tasks: [], completed: false }; 
-      const newEntry = type === 'tasks' ? { id: Date.now().toString(), text: content, done: false } : content; 
+      const fileData = plData[fileName] || defaultFileData; 
+      const newEntry = type === 'tasks'
+        ? { id: Date.now().toString(), text: content, done: false }
+        : type === 'doubts'
+          ? { id: Date.now().toString(), question: content, answer: '', resolved: false }
+          : content; 
       
-      const updatedEntries = [...(fileData[type] || []), newEntry];
-      const updatedPlaylistData = { ...plData, [fileName]: { ...fileData, [type]: updatedEntries } };
-      
-      // Cloud Sync: Update the specific video's map entry
-      api.put(`/workspace/${playlistId}/video`, { 
-        fileName, 
-        [type]: updatedEntries 
-      }).catch(err => console.error(`Failed to sync ${type}`, err));
+      updatedEntries = [...(fileData[type] || []), newEntry];
 
-      return { ...prev, [playlistId]: updatedPlaylistData }; 
-    }); 
+      if (fileName === '_COURSE_GOALS_' && type === 'tasks') {
+        return {
+          ...prev,
+          [playlistId]: {
+            ...plData,
+            _COURSE_GOALS_: { tasks: updatedEntries }
+          }
+        };
+      }
+
+      return { 
+        ...prev,
+        [playlistId]: { 
+          ...plData,
+          [fileName]: { ...fileData, [type]: updatedEntries }
+        }
+      }; 
+    });
+
+    try {
+      if (fileName === '_COURSE_GOALS_' && type === 'tasks') {
+        await api.put(`/workspace/${playlistId}/goals`, { courseGoals: updatedEntries });
+      } else {
+        await api.put(`/workspace/${playlistId}/video`, { 
+          fileName, 
+          [type]: updatedEntries 
+        });
+      }
+    } catch (err) {
+      console.error(`Failed to sync ${type}`, err);
+    }
   };
 
   // 2. Remove Entry Sync
   const removeEntry = async (playlistId, fileName, type, index) => { 
+    let newArray = [];
+
     setUserData(prev => { 
       const plData = prev[playlistId] || {}; 
       const fileData = plData[fileName]; 
       if (!fileData) return prev; 
       
-      const newArray = [...fileData[type]]; 
+      newArray = [...(fileData[type] || [])]; 
       newArray.splice(index, 1); 
-      
-      // Cloud Sync
-      api.put(`/workspace/${playlistId}/video`, { 
-        fileName, 
-        [type]: newArray 
-      }).catch(err => console.error(`Failed to sync deletion of ${type}`, err));
+
+      if (fileName === '_COURSE_GOALS_' && type === 'tasks') {
+        return {
+          ...prev,
+          [playlistId]: {
+            ...plData,
+            _COURSE_GOALS_: { tasks: newArray }
+          }
+        };
+      }
 
       return { ...prev, [playlistId]: { ...plData, [fileName]: { ...fileData, [type]: newArray } } }; 
     }); 
+
+    try {
+      if (fileName === '_COURSE_GOALS_' && type === 'tasks') {
+        await api.put(`/workspace/${playlistId}/goals`, { courseGoals: newArray });
+      } else {
+        await api.put(`/workspace/${playlistId}/video`, { 
+          fileName, 
+          [type]: newArray 
+        });
+      }
+    } catch (err) {
+      console.error(`Failed to sync deletion of ${type}`, err);
+    }
   };
 
   // 3. Toggle Video Task Sync
   const toggleTask = async (playlistId, fileName, index) => { 
+    let newTasks = [];
+
     setUserData(prev => { 
       const plData = prev[playlistId] || {}; 
       const fileData = plData[fileName]; 
       if (!fileData) return prev; 
       
-      const newTasks = fileData.tasks.map((t, i) => i === index ? { ...t, done: !t.done } : t); 
-      
-      // Cloud Sync
-      api.put(`/workspace/${playlistId}/video`, { 
-        fileName, 
-        tasks: newTasks 
-      }).catch(err => console.error("Failed to sync task toggle", err));
+      newTasks = (fileData.tasks || []).map((t, i) => i === index ? { ...t, done: !t.done } : t); 
+
+      if (fileName === '_COURSE_GOALS_') {
+        return {
+          ...prev,
+          [playlistId]: {
+            ...plData,
+            _COURSE_GOALS_: { tasks: newTasks }
+          }
+        };
+      }
 
       return { ...prev, [playlistId]: { ...plData, [fileName]: { ...fileData, tasks: newTasks } } }; 
     }); 
+
+    try {
+      if (fileName === '_COURSE_GOALS_') {
+        await api.put(`/workspace/${playlistId}/goals`, { courseGoals: newTasks });
+      } else {
+        await api.put(`/workspace/${playlistId}/video`, { 
+          fileName, 
+          tasks: newTasks 
+        });
+      }
+    } catch (err) {
+      console.error("Failed to sync task toggle", err);
+    }
   };
 
   // 4. Toggle Completion Sync
   const toggleFileCompletion = async (playlistId, fileName) => { 
+    let newCompletedState = false;
+
     setUserData(prev => { 
       const plData = prev[playlistId] || {}; 
-      const fileData = plData[fileName] || { notes: [], doubts: [], tasks: [], completed: false }; 
-      const newCompletedState = !fileData.completed;
-
-      // Cloud Sync
-      api.put(`/workspace/${playlistId}/video`, { 
-        fileName, 
-        completed: newCompletedState 
-      }).catch(err => console.error("Failed to sync completion", err));
+      const fileData = plData[fileName] || defaultFileData; 
+      newCompletedState = !fileData.completed;
 
       return { ...prev, [playlistId]: { ...plData, [fileName]: { ...fileData, completed: newCompletedState } } }; 
     }); 
+
+    try {
+      await api.put(`/workspace/${playlistId}/video`, { 
+        fileName, 
+        completed: newCompletedState 
+      });
+    } catch (err) {
+      console.error("Failed to sync completion", err);
+    }
+  };
+
+  const updateDoubtAnswer = async (playlistId, fileName, index, answer) => {
+    let updatedDoubts = [];
+
+    setUserData(prev => {
+      const plData = prev[playlistId] || {};
+      const fileData = plData[fileName] || defaultFileData;
+
+      updatedDoubts = (fileData.doubts || []).map((doubt, doubtIndex) => {
+        const normalizedDoubt = typeof doubt === 'string'
+          ? { id: `${fileName}-${doubtIndex}`, question: doubt, answer: '', resolved: false }
+          : doubt;
+
+        return doubtIndex === index
+          ? { ...normalizedDoubt, answer }
+          : normalizedDoubt;
+      });
+
+      return {
+        ...prev,
+        [playlistId]: {
+          ...plData,
+          [fileName]: {
+            ...fileData,
+            doubts: updatedDoubts
+          }
+        }
+      };
+    });
+
+    try {
+      await api.put(`/workspace/${playlistId}/video`, {
+        fileName,
+        doubts: updatedDoubts
+      });
+    } catch (err) {
+      console.error("Failed to sync doubt answer", err);
+    }
+  };
+
+  const updateCourseMeta = async (playlistId, updates) => {
+    setUserData(prev => {
+      const plData = prev[playlistId] || {};
+      const currentMeta = plData._COURSE_META_ || {
+        courseNotes: '',
+        notionUrl: '',
+        revisionList: []
+      };
+
+      return {
+        ...prev,
+        [playlistId]: {
+          ...plData,
+          _COURSE_META_: {
+            ...currentMeta,
+            ...updates
+          }
+        }
+      };
+    });
+
+    try {
+      await api.put(`/workspace/${playlistId}/meta`, updates);
+    } catch (err) {
+      console.error("Failed to sync course metadata", err);
+    }
+  };
+
+  const updateCourseLinks = async (playlistId, customLinks) => {
+    setPlaylists(prev => prev.map(playlist => (
+      playlist.id === playlistId ? { ...playlist, customLinks } : playlist
+    )));
+
+    try {
+      await api.put(`/courses/${playlistId}`, { customLinks });
+    } catch (err) {
+      console.error("Failed to sync course links", err);
+    }
   };
 
   // 5. Delete Course (Backend Cleanup)
@@ -300,26 +492,17 @@ function AppContent() {
     });
   };
 
-  if (loading) {
-    return (
-      <div className={`min-h-screen flex items-center justify-center font-bold tracking-widest uppercase ${isDarkMode ? 'bg-[#05050A] text-indigo-500' : 'bg-slate-50 text-indigo-600'}`}>
-        Initializing...
-      </div>
-    );
-  }
-
-
   return (
     <div className={`min-h-screen font-['Roboto',sans-serif] selection:bg-indigo-500/30 ${isDarkMode ? 'bg-[#05050A] text-slate-200' : 'bg-slate-50 text-slate-900'}`}>
       
       <Routes>
         <Route path="/auth" element={<AuthPage isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />} />
         
-        <Route path="/" element={<LandingPage playlists={playlists || []} onViewCourses={() => navigate('/library')} onOpen={(id) => navigate(`/course/${id}`)} userData={userData || {}} onHome={() => navigate('/')} onAdd={handleOpenAddModal} onDelete={handleDeletePlaylist} onEdit={handleEditClick} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode}/>} />
+        <Route path="/" element={<LandingPage playlists={playlists || []} onViewCourses={() => navigate('/library')} onOpen={(id) => navigate(`/course/${id}`)} userData={userData || {}} productivityData={productivityData} onHome={() => navigate('/')} onAdd={handleOpenAddModal} onDelete={handleDeletePlaylist} onEdit={handleEditClick} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode}/>} />
         
-        <Route path="/library" element={<CoursesView playlists={playlists || []} onOpen={(id) => navigate(`/course/${id}`)} onAdd={handleOpenAddModal} onHome={() => navigate('/')} onDelete={handleDeletePlaylist} onEdit={handleEditClick} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} onViewCourses={() => navigate('/library')}/>} />
+        <Route path="/library" element={<CoursesView playlists={playlists || []} onOpen={(id) => navigate(`/course/${id}`)} onAdd={handleOpenAddModal} onHome={() => navigate('/')} onDelete={handleDeletePlaylist} onEdit={handleEditClick} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} userData={userData} onViewCourses={() => navigate('/library')}/>} />
 
-        <Route path="/course/:id" element={<CourseRoute playlists={playlists} sessionFiles={sessionFiles} setSessionFiles={setSessionFiles} userData={userData} updateFileTime={updateFileTime} toggleFileCompletion={toggleFileCompletion} addEntry={addEntry} removeEntry={removeEntry} toggleTask={toggleTask} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} navigate={navigate}/>} />
+        <Route path="/course/:id" element={<CourseRoute playlists={playlists} sessionFiles={sessionFiles} setSessionFiles={setSessionFiles} userData={userData} updateFileTime={updateFileTime} toggleFileCompletion={toggleFileCompletion} addEntry={addEntry} removeEntry={removeEntry} toggleTask={toggleTask} updateDoubtAnswer={updateDoubtAnswer} updateCourseMeta={updateCourseMeta} updateCourseLinks={updateCourseLinks} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} navigate={navigate}/>} />
         
         <Route 
           path="/goals" 

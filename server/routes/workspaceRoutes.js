@@ -67,4 +67,28 @@ router.put('/:courseId/goals', protect, async (req, res) => {
   }
 });
 
+// @route   PUT /api/workspace/:courseId/meta
+// @desc    Update course-level workspace metadata
+router.put('/:courseId/meta', protect, async (req, res) => {
+  try {
+    const { courseNotes, notionUrl, revisionList } = req.body;
+    const workspace = await Workspace.findOne({ user: req.user._id, course: req.params.courseId });
+
+    if (!workspace) return res.status(404).json({ message: 'Workspace not found' });
+
+    const nextMeta = {
+      courseNotes: courseNotes !== undefined ? courseNotes : workspace.courseMeta?.courseNotes || '',
+      notionUrl: notionUrl !== undefined ? notionUrl : workspace.courseMeta?.notionUrl || '',
+      revisionList: revisionList !== undefined ? revisionList : workspace.courseMeta?.revisionList || []
+    };
+
+    workspace.courseMeta = nextMeta;
+    await workspace.save();
+
+    res.json(workspace.courseMeta);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to update course metadata' });
+  }
+});
+
 module.exports = router;
