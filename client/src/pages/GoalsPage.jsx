@@ -8,7 +8,7 @@ import { Header } from '../components/ui/Header';
 // --- ICON IMPORTS ---
 import { 
   Calendar as CalendarIcon, CheckSquare, Square, Clock, 
-  BookOpen, ChevronRight, ChevronLeft, Plus, Trash2, PlayCircle, Bell,
+  BookOpen, ChevronRight, Copy, ChevronLeft, Plus, Trash2, PlayCircle, Bell,
   X, Target, LayoutGrid, PenTool,MessageCircleQuestion,ChevronDown, AlignLeft
 } from 'lucide-react';
 
@@ -623,7 +623,43 @@ function WeeklyConfig({ plan, setPlan, playlists, isDarkMode, todayDay, onSync }
   const [taskInputs, setTaskInputs] = useState({}); 
   const [editingLink, setEditingLink] = useState({}); 
   const [openCourseSelect, setOpenCourseSelect] = useState(null); 
-  
+
+  const [copyMenuOpen, setCopyMenuOpen] = useState(null);
+  const [selectedCopyDays, setSelectedCopyDays] = useState([]);
+
+  const handleCopySubject = (subId) => {
+    if (selectedCopyDays.length === 0) return;
+
+    const subjectToCopy = plan[selectedDay].subjects.find(s => s.id === subId);
+    if (!subjectToCopy) return;
+
+    const newWeeklyPlan = { ...plan };
+
+    selectedCopyDays.forEach(day => {
+      const duplicatedSubject = {
+        ...subjectToCopy,
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        tasks: (subjectToCopy.tasks || []).map(t => ({
+          ...t,
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 9)
+        }))
+      };
+
+      const daySubjects = newWeeklyPlan[day].subjects || [];
+      newWeeklyPlan[day] = {
+        ...newWeeklyPlan[day],
+        subjects: [...daySubjects, duplicatedSubject]
+      };
+    });
+
+    setPlan(newWeeklyPlan);
+    onSync({ weeklyPlan: newWeeklyPlan });
+    
+    // Reset states
+    setCopyMenuOpen(null);
+    setSelectedCopyDays([]);
+  };
+
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const dayData = plan[selectedDay] || { focus: '', subjects: [] };
 
@@ -737,12 +773,12 @@ function WeeklyConfig({ plan, setPlan, playlists, isDarkMode, todayDay, onSync }
                <h3 className={`text-4xl md:text-5xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                   Configure <span className="text-blue-500">{selectedDay}</span>
                </h3>
-               <div className="flex flex-col w-full sm:w-120 mr-2">
+               <div className="flex flex-col w-full sm:w-120 mr-1.5">
                   <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 pl-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}></label>
                   <input 
                      type="text" value={dayData.focus} onChange={e => updateFocus(e.target.value)} 
-                     placeholder="Day's Focus Theme- WebDev #Lets Develope Something cool"
-                     className={`w-full px-5 py-3.5 rounded-full border text-sm font-bold outline-none focus:border-blue-500 transition-all shadow-lg backdrop-blur-2xl ${isDarkMode ? 'bg-[#0f172a]/40 border-white/10 text-white placeholder:text-slate-500 shadow-black/20' : 'bg-white/60 border-slate-300 text-slate-900 placeholder:text-slate-400 shadow-slate-200/50'}`}
+                     placeholder="Day's Focus Theme- WebDev "
+                     className={`w-full px-5 py-3.5 rounded-xl border text-sm font-bold outline-none focus:border-blue-500 transition-all shadow-lg backdrop-blur-2xl ${isDarkMode ? 'bg-[#0f172a]/40 border-white/10 text-white placeholder:text-slate-500 shadow-black/20' : 'bg-white/60 border-slate-300 text-slate-900 placeholder:text-slate-400 shadow-slate-200/50'}`}
                   />
                </div>
             </div>
@@ -774,14 +810,52 @@ function WeeklyConfig({ plan, setPlan, playlists, isDarkMode, todayDay, onSync }
 
             {(dayData.subjects || []).map(sub => {
                const course = playlists.find(p => p.id === sub.courses?.[0]);
-               const isDropdownOpen = editingLink[sub.id] || openCourseSelect === sub.id;
-
+               const isDropdownOpen = editingLink[sub.id] || openCourseSelect === sub.id || copyMenuOpen === sub.id;
+               
                return (
                   <div key={sub.id} className={`flex flex-col relative group transition-all duration-200 ${isDropdownOpen ? 'z-50' : 'z-10'}`}>
                      
-                     <button onClick={() => deleteSubject(sub.id)} className="absolute -top-3 -right-3 z-50 p-2.5 rounded-full bg-red-500 text-white shadow-lg transition-all opacity-0 group-hover:opacity-100 hover:scale-110 hover:bg-red-600">
-                        <Trash2 className="w-4 h-4" />
-                     </button>
+                      <div className="absolute top-3 right-3 z-50 flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
+   
+                        <div className="relative">
+                            <button 
+                              onClick={() => { setCopyMenuOpen(copyMenuOpen === sub.id ? null : sub.id); setSelectedCopyDays([]); }} 
+                              className="p-2.5 rounded-full bg-blue-500 text-white shadow-lg hover:scale-110 hover:bg-blue-600 transition-all"
+                              title="Copy to other days"
+                            >
+                              <Copy className="w-4 h-4" />
+                            </button>
+                            
+                            {copyMenuOpen === sub.id && (
+                              <div className={`absolute top-full right-0 mt-2 p-4 rounded-2xl border backdrop-blur-3xl shadow-2xl w-48 ${isDarkMode ? 'bg-[#151E32]/95 border-slate-700' : 'bg-white/95 border-slate-200'}`}>
+                                  <h4 className="text-[10px] font-black mb-2 uppercase tracking-widest text-slate-400">Copy to:</h4>
+                                  <div className="flex flex-col gap-1.5 mb-4">
+                                    {days.filter(d => d !== selectedDay).map(day => (
+                                        <label key={day} className="flex items-center gap-2 text-sm cursor-pointer group/label">
+                                          <input type="checkbox" 
+                                              className="w-4 h-4 rounded border-slate-500 text-blue-500 focus:ring-blue-500"
+                                              checked={selectedCopyDays.includes(day)}
+                                              onChange={(e) => {
+                                                if(e.target.checked) setSelectedCopyDays(prev => [...prev, day]);
+                                                else setSelectedCopyDays(prev => prev.filter(d => d !== day));
+                                              }} 
+                                          />
+                                          <span className={`text-xs font-bold transition-colors ${isDarkMode ? 'text-slate-300 group-hover/label:text-white' : 'text-slate-700 group-hover/label:text-slate-900'}`}>{day}</span>
+                                        </label>
+                                    ))}
+                                  </div>
+                                  <div className="flex justify-between gap-2">
+                                    <button onClick={() => setCopyMenuOpen(null)} className={`flex-1 px-2 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-colors ${isDarkMode ? 'hover:bg-white/10 text-slate-400' : 'hover:bg-slate-100 text-slate-500'}`}>Cancel</button>
+                                    <button onClick={() => handleCopySubject(sub.id)} disabled={selectedCopyDays.length === 0} className="flex-1 px-2 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">Copy</button>
+                                  </div>
+                              </div>
+                            )}
+                        </div>
+
+                        <button onClick={() => deleteSubject(sub.id)} className="p-2.5 rounded-full bg-red-500 text-white shadow-lg hover:scale-110 hover:bg-red-600 transition-all" title="Delete Subject">
+                            <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
 
                      <div className="grid grid-cols-1 xl:grid-cols-5 gap-5 h-full min-h-[300px]">
                         
