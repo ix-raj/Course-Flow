@@ -79,7 +79,7 @@ export default function CoursesView({
       />
 
       {/* 2. MAIN CONTENT AREA */}
-      <div className="flex-1 w-[96%] max-w-[1400px] mx-auto py-8">
+      <div className="flex-1 w-[96%] max-w-[1400px] mx-auto py-6 sm:py-8">
         <div className="relative w-full flex flex-col pb-12 animate-in fade-in duration-700 min-h-[calc(100vh-80px)]">
         
           {/* FIXED BACKGROUND OVERLAY */}
@@ -91,20 +91,20 @@ export default function CoursesView({
              <div className={`absolute inset-0 ${isDarkMode ? 'bg-gradient-to-b from-[#0B1121]/80 via-[#0B1121]/90 to-[#0B1121]' : 'bg-gradient-to-b from-slate-50/80 via-slate-50/90 to-slate-50'}`} />
           </div>
           
-          <div className='flex justify-between'>
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
             {/* PAGE TITLE */}
-            <div className="mb-6 z-30">
-               <h1 className={`text-3xl font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>My Library</h1>
+            <div className="z-30 max-w-xl">
+               <h1 className={`text-2xl sm:text-3xl font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>My Library</h1>
                <p className={`text-sm font-medium mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Manage and access all your local courses.</p>
             </div>
 
             {/* PREMIUM TOOLBAR */}
-            <div className={`relative z-30 p-3 w-[70%] rounded-2xl shadow-sm mb-8 flex flex-col md:flex-row gap-4 items-center justify-between transition-colors border backdrop-blur-xl
+            <div className={`relative z-30 p-3 w-full lg:w-[70%] rounded-2xl shadow-sm mb-3 lg:mb-8 flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between transition-colors border backdrop-blur-xl
               ${isDarkMode ? 'bg-slate-800/70 border-white/10' : 'bg-white/70 border-slate-200'}`}
               >
                
                {/* Search Input */}
-               <div className="relative w-full md:w-96 group">
+               <div className="relative w-full md:max-w-sm group">
                   <Search className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${isDarkMode ? 'text-slate-500 group-focus-within:text-indigo-400' : 'text-slate-400 group-focus-within:text-indigo-500'}`} />
                   <input 
                     type="text" 
@@ -117,13 +117,13 @@ export default function CoursesView({
                </div>
 
                {/* Controls */}
-               <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+               <div className="flex flex-wrap items-stretch sm:items-center gap-3 w-full md:w-auto">
                   
                   {/* Sort Dropdown */}
-                  <div className="relative">
+                  <div className="relative flex-1 sm:flex-none">
                     <button 
                       onClick={() => { setShowSortMenu(!showSortMenu); setShowGridMenu(false); }}
-                      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ease-out hover:brightness-110 border
+                      className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ease-out hover:brightness-110 border
                         ${isDarkMode ? 'bg-slate-900 text-slate-300 border-slate-700 hover:border-slate-500' : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300'}`}
                     >
                       <SortDesc className="w-4 h-4" /> Sort
@@ -184,7 +184,7 @@ export default function CoursesView({
                   {/* Add Course Button */}
                   <button 
                     onClick={onAdd}
-                    className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-lg transition-transform duration-200 hover:scale-105 whitespace-nowrap"
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-lg transition-transform duration-200 hover:scale-105 whitespace-nowrap"
                   >
                     <Plus className="w-4 h-4" /> Add Course
                   </button>

@@ -135,37 +135,38 @@ export default function GoalsPage({ playlists, userData, isDarkMode, setIsDarkMo
       />
   
       {/* --- ANIMATED FLOATING TAB SWITCHER --- */}
-      <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 flex gap-2">
+      <div className="fixed top-[90px] sm:top-3 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1.5rem)] sm:w-auto max-w-[720px] flex gap-2 rounded-full p-1 backdrop-blur-xl border  bg-white/10 border-white/10">
 
-  {[
-    { id: 'daily', label: 'Daily View' },
-    { id: 'weekly', label: 'Weekly Plan' },
-    { id: 'monthly', label: 'Monthly Plan' }
-  ].map((tab) => {
-    const isActive = activeTab === tab.id;
+        {[
+          { id: 'daily', label: 'Daily View', mobileLabel: 'Daily' },
+          { id: 'weekly', label: 'Weekly Plan', mobileLabel: 'Weekly' },
+          { id: 'monthly', label: 'Monthly Plan', mobileLabel: 'Monthly' }
+        ].map((tab) => {
+          const isActive = activeTab === tab.id;
 
-    return (
-      <button
-        key={tab.id}
-        onClick={() => setActiveTab(tab.id)}
-        className={`px-5 py-2 rounded-full text-xs font-semibold transition-all duration-200
-          
-          ${isActive
-            ? 'bg-gradient-to-br from-indigo-500 to-cyan-500 text-white shadow-md'
-            : (isDarkMode
-                ? 'text-slate-400 hover:text-white hover:bg-white/5'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-white/70 shadow-sm')
-          }
-        `}
-      >
-        {tab.label}
-      </button>
-    );
-  })}
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 sm:flex-none px-3 sm:px-5 py-2.5 rounded-full text-[11px] sm:text-xs font-semibold transition-all duration-200 text-center
+                
+                ${isActive
+                  ? 'bg-gradient-to-br from-indigo-500 to-cyan-500 text-white shadow-md'
+                  : (isDarkMode
+                      ? 'text-slate-400 hover:text-white hover:bg-white/5'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/70 shadow-sm')
+                }
+              `}
+            >
+              <span className="sm:hidden">{tab.mobileLabel}</span>
+              <span className="hidden sm:inline">{tab.label}</span>
+            </button>
+          );
+        })}
 
-</div>
+      </div>
 
-      <div className="flex-1 w-[96%] max-w-[1600px] mx-auto py-8 flex flex-col relative z-10">
+      <div className="flex-1 w-[96%] max-w-[1600px] mx-auto pt-20 sm:pt-8 pb-8 flex flex-col relative z-10">
       
         {/* --- REDESIGNED DAILY TAB VIEW --- */}
         {activeTab === 'daily' && (
@@ -470,11 +471,11 @@ function DailyView({
       </div>
 
       {/* HERO SECTION */}
-      <div className="relative z-10 w-full px-6 lg:px-12 mb-8 shrink-0 pt-2">
+      <div className="relative z-10 w-full px-4 sm:px-6 lg:px-12 mb-6 sm:mb-8 shrink-0 pt-2">
          <p className={`text-sm font-bold tracking-widest uppercase mb-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
             {formattedToday}
          </p>
-         <h1 className={`text-4xl md:text-5xl font-black tracking-tight pl-1 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+         <h1 className={`text-3xl sm:text-4xl md:text-5xl font-black tracking-tight pl-1 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
             Today's Goals
          </h1>
          <p className={`text-base md:text-lg font-medium italic max-w-3xl leading-relaxed pl-1 mt-1 ${isDarkMode ? 'text-blue-300/80' : 'text-blue-600/80'}`}>
@@ -487,16 +488,16 @@ function DailyView({
         
         {(todaysData?.subjects?.length > 1) && (
           <>
-            <button onClick={scrollLeft} className="absolute -left-4 top-1/2 -translate-y-1/2 z-20 p-2 transition-all opacity-0 group-hover/carousel:opacity-100 focus:opacity-100 hover:scale-110 text-white/50 hover:text-white drop-shadow-lg">
+            <button onClick={scrollLeft} className="hidden md:block absolute -left-4 top-1/2 -translate-y-1/2 z-20 p-2 transition-all opacity-0 group-hover/carousel:opacity-100 focus:opacity-100 hover:scale-110 text-white/50 hover:text-white drop-shadow-lg">
                <ChevronLeft className="w-12 h-12" />
             </button>
-            <button onClick={scrollRight} className="absolute -right-4 top-1/2 -translate-y-1/2 z-20 p-2 transition-all opacity-0 group-hover/carousel:opacity-100 focus:opacity-100 hover:scale-110 text-white/50 hover:text-white drop-shadow-lg">
+            <button onClick={scrollRight} className="hidden md:block absolute -right-4 top-1/2 -translate-y-1/2 z-20 p-2 transition-all opacity-0 group-hover/carousel:opacity-100 focus:opacity-100 hover:scale-110 text-white/50 hover:text-white drop-shadow-lg">
                <ChevronRight className="w-12 h-12" />
             </button>
           </>
         )}
 
-        <div ref={carouselRef} className="w-full overflow-x-auto snap-x snap-mandatory no-scrollbar flex gap-16 pb-8 items-stretch scroll-smooth">
+        <div ref={carouselRef} className="w-full overflow-x-auto snap-x snap-mandatory no-scrollbar flex gap-4 sm:gap-8 lg:gap-12 pb-6 sm:pb-8 items-stretch scroll-smooth px-1 sm:px-0">
           {(!todaysData?.subjects || todaysData.subjects.length === 0) ? (
             <div className={`w-full shrink-0 p-12 rounded-[2rem] border backdrop-blur-3xl flex flex-col items-center justify-center text-center ${isDarkMode ? 'bg-[#0f172a]/30 border-white/10 shadow-lg shadow-black/20' : 'bg-white/40 border-slate-200 shadow-md'}`}>
                <LayoutGrid className={`w-12 h-12 mb-3 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`} />
@@ -514,36 +515,39 @@ function DailyView({
               }
 
               return (
-                <div key={sub.id} className="shrink-0 w-[calc(100vw-3rem)] lg:w-[calc(100vw-6rem)] max-w-[1020px] mx-10 flex flex-col">
-                   <div className="grid grid-cols-1 xl:grid-cols-5 gap-5 h-full min-h-[300px]">
+                <div key={sub.id} className="shrink-0 w-[calc(100vw-1.5rem)] sm:w-[calc(100vw-3rem)] lg:w-[calc(100vw-6rem)] max-w-[1020px] mx-1 sm:mx-4 lg:mx-6 flex flex-col snap-center">
+                   <div className={`rounded-[1.75rem] p-3 sm:p-4 lg:p-5 border backdrop-blur-3xl shadow-lg transition-all h-full ${
+                     isDarkMode ? 'bg-[#07101f]/60 border-white/10 shadow-black/20' : 'bg-white/55 border-white/70 shadow-slate-300/40'
+                   }`}>
+                   <div className="grid grid-cols-1 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5 h-full min-h-[300px]">
                       
                       {/* LEFT: TO-DO CARD */}
-                      <div className={`xl:col-span-3 rounded-[1.5rem] p-6 border backdrop-blur-3xl flex flex-col transition-all relative overflow-hidden
+                      <div className={`xl:col-span-3 rounded-[1.25rem] sm:rounded-[1.5rem] p-4 sm:p-5 lg:p-6 border backdrop-blur-3xl flex flex-col transition-all relative overflow-hidden
                          ${isDarkMode ? 'bg-[#0f172a]/30 border-white/10 shadow-lg shadow-black/20' : 'bg-white/40 border-white/60 shadow-md'}`}
                       >
-                         <div className="absolute top-0 right-0 px-5 py-2 bg-[#1e1b4b]/60 backdrop-blur-md rounded-bl-3xl rounded-tr-[1.5rem]">
-                            <span className="text-sm font-black tracking-widest text-[#84c8fc] drop-shadow-md">{sub.name}</span>
+                         <div className="absolute top-0 right-0 max-w-[70%] px-3 sm:px-5 py-2 bg-[#1e1b4b]/60 backdrop-blur-md rounded-bl-3xl rounded-tr-[1.25rem] sm:rounded-tr-[1.5rem]">
+                            <span className="block truncate text-xs sm:text-sm font-black tracking-widest text-[#84c8fc] drop-shadow-md">{sub.name}</span>
                          </div>
 
                          <div className="flex items-center gap-4 mb-4 relative z-10 ">
                            <h3 className={`text-base font-black uppercase tracking-widest ${isDarkMode ? 'text-white' : 'text-slate-900/60'}`}>To Do List</h3>
                          </div>
                          
-                         <div className="flex flex-col flex-1 gap-1 overflow-y-auto custom-scrollbar pr-2 max-h-[220px] relative z-10">
+                         <div className="flex flex-col flex-1 gap-1.5 overflow-y-auto custom-scrollbar pr-1 sm:pr-2 max-h-[220px] relative z-10">
                             {(sub.tasks || []).length === 0 && <p className="text-slate-500 italic text-xs">No tasks assigned.</p>}
                             {(sub.tasks || []).map(task => {
                                const isDone = !!completionLog[`${todayDateStr}_${task.id}`];
                                return (
-                                 <div key={task.id} onClick={() => handleToggleTask(todayDay, sub.id,task.id)} className={`group flex items-center justify-between px-2 py-2 rounded-xl cursor-pointer transition-all border
+                                 <div key={task.id} onClick={() => handleToggleTask(todayDay, sub.id,task.id)} className={`group flex items-start justify-between gap-3 px-2.5 sm:px-3 py-2 rounded-xl cursor-pointer transition-all border
                                    ${isDone 
                                      ? (isDarkMode ? 'bg-[#38bdf8]/10 border-[#38bdf8]/20' : 'bg-[#7dd3fc]/30 border-[#38bdf8]/30') 
                                      : (isDarkMode ? 'bg-transparent border-transparent hover:bg-white/5' : 'bg-transparent border-transparent hover:bg-white hover:shadow-sm')}`}
                                  >
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-start gap-3 min-w-0">
                                       <button className={`transition-colors ${isDone ? 'text-[#38bdf8]' : (isDarkMode ? 'text-slate-500 group-hover:text-[#38bdf8]' : 'text-slate-400 group-hover:text-blue-500')}`}>
                                          {isDone ? <CheckSquare className="w-5 h-5" /> : <Square className="w-5 h-5" />}
                                       </button>
-                                      <span className={`text-sm font-medium transition-all ${isDone ? (isDarkMode ? 'text-slate-400 line-through opacity-60' : 'text-slate-500 line-through opacity-60') : (isDarkMode ? 'text-slate-200' : 'text-slate-800')}`}>
+                                      <span className={`text-xs sm:text-sm font-medium transition-all break-words ${isDone ? (isDarkMode ? 'text-slate-400 line-through opacity-60' : 'text-slate-500 line-through opacity-60') : (isDarkMode ? 'text-slate-200' : 'text-slate-800')}`}>
                                          {task.text}
                                          {task.time && <span className={`ml-2 text-xs opacity-60 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>(Today {task.time})</span>}
                                       </span>
@@ -554,7 +558,7 @@ function DailyView({
                          </div>
 
                         {/* Direct Inline Add Task with Time Picker */}
-                        <div className="mt-4 flex items-center gap-3 relative z-10 border-t border-white/10 pt-4">
+                        <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 relative z-10 border-t border-white/10 pt-4">
                           <input 
                             value={taskInputs[sub.id]?.text || ''}
                             onChange={e => setTaskInputs({...taskInputs, [sub.id]: { ...taskInputs[sub.id], text: e.target.value }})}
@@ -569,27 +573,27 @@ function DailyView({
                             isDarkMode={isDarkMode}
                           />
 
-                          <button onClick={() => handleAddDailyTask(sub.id)} className="px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 font-bold text-xs bg-[#5ebbea] hover:bg-[#2dd4bf] text-slate-900 shadow-md transition-colors shrink-0">
+                          <button onClick={() => handleAddDailyTask(sub.id)} className="w-full sm:w-auto px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 font-bold text-xs bg-[#5ebbea] hover:bg-[#2dd4bf] text-slate-900 shadow-md transition-colors shrink-0">
                             <Plus className="w-3.5 h-3.5" /> Add
                           </button>
                         </div>
                       </div>
 
                       {/* RIGHT: COURSE & ACTIONS */}
-                      <div className="xl:col-span-2 flex flex-col gap-5">
+                      <div className="xl:col-span-2 flex flex-col gap-3 sm:gap-5">
                          
                          {/* 1. FEATURED COURSE CARD */}
-                         <div className={`flex-1 rounded-[1.5rem] p-3 lg:p-4 border backdrop-blur-3xl flex flex-col justify-center transition-all
+                         <div className={`flex-1 rounded-[1.25rem] sm:rounded-[1.5rem] p-3 sm:p-4 border backdrop-blur-3xl flex flex-col justify-center transition-all
                             ${isDarkMode ? 'bg-[#0f172a]/30 border-white/10 shadow-lg shadow-black/20' : 'bg-white/40 border-white/60 shadow-md'}`}
                          >
                             <div className="flex justify-between items-start ">
-                               <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Featured Course</h3>
+                               <h3 className={`text-base sm:text-lg font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Featured Course</h3>
                                <CircularProgress progress={progress} />
                             </div>
                             
                             {course ? (
-                               <div className="flex flex-row items-center justify-between gap-4 ">
-                                  <div className="w-37 h-25 rounded-xl bg-slate-800 overflow-hidden relative shadow-sm shrink-0 border border-white/5">
+                               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 ">
+                                  <div className="w-full sm:w-36 h-24 rounded-xl bg-slate-800 overflow-hidden relative shadow-sm shrink-0 border border-white/5">
                                      {course.cover ? (
                                         <img src={course.cover} className="w-full h-full object-cover" alt="cover" />
                                      ) : (
@@ -597,12 +601,12 @@ function DailyView({
                                      )}
                                   </div>
                                   
-                                  <div className="flex-1 flex flex-col justify-center overflow-hidden pr-2">
+                                  <div className="flex-1 w-full flex flex-col justify-center overflow-hidden pr-0 sm:pr-2">
                                      <h4 className={`text-sm font-bold truncate mb-0.5 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{course.title}</h4>
                                      <p className={`text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{course.videoCount || 0} modules</p>
                                   </div>
                                   
-                                  <button onClick={() => navigate(`/course/${course.id}`)} className="shrink-0 px-4 py-2.5 bg-[#7dd3fc] hover:bg-[#38bdf8] text-slate-900 rounded-full text-xs font-bold shadow-sm transition-colors flex items-center justify-center">
+                                  <button onClick={() => navigate(`/course/${course.id}`)} className="w-full sm:w-auto shrink-0 px-4 py-2.5 bg-[#7dd3fc] hover:bg-[#38bdf8] text-slate-900 rounded-full text-xs font-bold shadow-sm transition-colors flex items-center justify-center">
                                      Continue Course
                                   </button>
                                </div>
@@ -615,28 +619,28 @@ function DailyView({
                          </div>
 
                          {/* 2. QUICK ACTIONS CARD */}
-                         <div className={`rounded-[1.5rem] p-5 lg:p-6 border backdrop-blur-3xl transition-all ${isDarkMode ? 'bg-[#0f172a]/30 border-white/10 shadow-lg shadow-black/20' : 'bg-white/40 border-white/60 shadow-md'}`}  >
+                         <div className={`rounded-[1.25rem] sm:rounded-[1.5rem] p-4 sm:p-5 lg:p-6 border backdrop-blur-3xl transition-all ${isDarkMode ? 'bg-[#0f172a]/30 border-white/10 shadow-lg shadow-black/20' : 'bg-white/40 border-white/60 shadow-md'}`}  >
                             <h3 className={`text-sm font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Quick Actions</h3>
-                            <div className="grid grid-cols-2 gap-3">
-                               <button className={`flex items-center gap-3 px-4 py-2.5 rounded-full border transition-all
+                            <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                               <button className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 rounded-full border transition-all min-w-0
                                  ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-white/50 border-slate-200 hover:bg-white text-slate-700 shadow-sm'}`}>
                                   <PenTool className={`w-3.5 h-3.5 shrink-0 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`} />
                                   <span className="text-xs font-bold truncate">{sub.actionUrls?.notes?.label || "Notes"}</span>
                                </button>
 
-                               <button className={`flex items-center gap-3 px-4 py-2.5 rounded-full border transition-all
+                               <button className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 rounded-full border transition-all min-w-0
                                  ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-white/50 border-slate-200 hover:bg-white text-slate-700 shadow-sm'}`}>
                                   <MessageCircleQuestion className={`w-3.5 h-3.5 shrink-0 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`} />
                                   <span className="text-xs font-bold truncate">{sub.actionUrls?.doubts?.label || "Resources"}</span>
                                </button>
 
-                               <button className={`flex items-center gap-3 px-4 py-2.5 rounded-full border transition-all
+                               <button className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 rounded-full border transition-all min-w-0
                                  ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-white/50 border-slate-200 hover:bg-white text-slate-700 shadow-sm'}`}>
                                   <Target className={`w-3.5 h-3.5 shrink-0 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`} />
                                   <span className="text-xs font-bold truncate">{sub.actionUrls?.goals?.label || "Goals"}</span>
                                </button>
 
-                               <button className={`flex items-center gap-3 px-4 py-2.5 rounded-full border transition-all
+                               <button className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 rounded-full border transition-all min-w-0
                                  ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-white/50 border-slate-200 hover:bg-white text-slate-700 shadow-sm'}`}>
                                   <CalendarIcon className={`w-3.5 h-3.5 shrink-0 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`} />
                                   <span className="text-xs font-bold truncate">{sub.actionUrls?.calendar?.label || "Workshop"}</span>
@@ -646,6 +650,7 @@ function DailyView({
 
                       </div>
                    </div>
+                   </div>
                 </div>
               );
             })
@@ -654,7 +659,7 @@ function DailyView({
       </div>
 
       {/* --- UPCOMING EVENTS --- */}
-      <div className={`relative z-10 w-full px-6 lg:px-12 mt-auto transition-opacity duration-500 ${upcomingEvents?.length > 0 ? 'opacity-100' : 'opacity-0 pointer-events-none hidden'}`}>
+      <div className={`relative z-10 w-full px-4 sm:px-6 lg:px-12 mt-auto transition-opacity duration-500 ${upcomingEvents?.length > 0 ? 'opacity-100' : 'opacity-0 pointer-events-none hidden'}`}>
         <div className={`w-full rounded-[1.5rem] p-5 md:p-6 flex flex-col md:flex-row gap-5 items-center shadow-lg border ${isDarkMode ? 'bg-[#0B1121]/90 backdrop-blur-xl border-slate-700' : 'bg-white/90 backdrop-blur-xl border-slate-200'}`}>
            <div className="shrink-0 flex flex-col items-center md:items-start text-center md:text-left md:w-40 md:border-r md:border-slate-500/20 md:pr-5">
               <CalendarIcon className="w-6 h-6 text-blue-500 mb-1.5" />
@@ -836,13 +841,13 @@ function WeeklyConfig({ plan, setPlan, playlists, isDarkMode, todayDay, onSync }
          <div className={`absolute inset-0 ${isDarkMode ? 'bg-gradient-to-b from-[#0B1121]/80 via-[#0B1121]/90 to-[#0B1121]' : 'bg-gradient-to-b from-slate-50/80 via-slate-50/90 to-slate-50'}`} />
       </div>
 
-      <div className="relative z-10 w-full max-w-[1600px] mx-auto flex flex-col px-6 lg:px-12 pt-8 pb-12 h-full">
+      <div className="relative z-10 w-full max-w-[1600px] mx-auto flex flex-col px-4 sm:px-6 lg:px-12 pt-6 sm:pt-8 pb-12 h-full">
          
-         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-9">
-               <h3 className={`text-4xl md:text-5xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6 mb-7 sm:mb-9">
+               <h3 className={`text-3xl sm:text-4xl md:text-5xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                   Configure <span className="text-blue-500">{selectedDay}</span>
                </h3>
-               <div className="flex flex-col w-full sm:w-120 mr-1.5">
+               <div className="flex flex-col w-full sm:max-w-xl">
                   <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 pl-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}></label>
                   <input 
                      type="text" value={dayData.focus} onChange={e => updateFocus(e.target.value)} 
@@ -852,15 +857,15 @@ function WeeklyConfig({ plan, setPlan, playlists, isDarkMode, todayDay, onSync }
                </div>
             </div>
 
-         <div className="flex flex-col lg:flex-row gap-8 items-start w-full">
+         <div className="flex flex-col lg:flex-row gap-5 sm:gap-8 items-start w-full">
 
-         <div className={`w-full lg:w-1/4 shrink-0 flex flex-col gap-3 rounded-[2rem] p-6 border backdrop-blur-3xl shadow-lg shadow-black/20 ${isDarkMode ? 'bg-[#0f172a]/30 border-white/10' : 'bg-white/40 border-white/60'}`}>
+         <div className={`w-full lg:w-1/4 shrink-0 flex flex-col gap-3 rounded-[1.5rem] sm:rounded-[2rem] p-4 sm:p-6 border backdrop-blur-3xl shadow-lg shadow-black/20 ${isDarkMode ? 'bg-[#0f172a]/30 border-white/10' : 'bg-white/40 border-white/60'}`}>
             <h2 className={`text-2xl font-black mb-6 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Weekly Plan</h2>
-            <div className="flex flex-col gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-1 gap-2">
                {days.map(day => (
                  <button 
                    key={day} onClick={() => setSelectedDay(day)}
-                   className={`p-4 rounded-2xl border text-left transition-all duration-200 ${
+                   className={`p-3 sm:p-4 rounded-2xl border text-left transition-all duration-200 ${
                      selectedDay === day 
                        ? (isDarkMode ? 'bg-blue-500/20 border-blue-500/50 shadow-md shadow-blue-500/10' : 'bg-blue-50 border-blue-300 shadow-sm') 
                        : (isDarkMode ? 'bg-transparent border-transparent hover:bg-white/5' : 'bg-transparent border-transparent hover:bg-white/50')
@@ -875,7 +880,7 @@ function WeeklyConfig({ plan, setPlan, playlists, isDarkMode, todayDay, onSync }
             </div>
          </div>
 
-         <div className="w-full lg:w-3/4 flex flex-col gap-10 overflow-y-visible pb-10 pr-2 pl-2 -ml-2">
+         <div className="w-full lg:w-3/4 flex flex-col gap-6 sm:gap-10 overflow-y-visible pb-10 px-1 sm:px-2">
 
             {(dayData.subjects || []).map(sub => {
                const course = playlists.find(p => p.id === sub.courses?.[0]);
@@ -884,7 +889,7 @@ function WeeklyConfig({ plan, setPlan, playlists, isDarkMode, todayDay, onSync }
                return (
                   <div key={sub.id} className={`flex flex-col relative group transition-all duration-200 ${isDropdownOpen ? 'z-50' : 'z-10'}`}>
                      
-                      <div className="absolute top-3 right-3 z-50 flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                      <div className="absolute top-3 right-3 z-50 flex gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all">
    
                         <div className="relative">
                             <button 
@@ -926,17 +931,20 @@ function WeeklyConfig({ plan, setPlan, playlists, isDarkMode, todayDay, onSync }
                         </button>
                       </div>
 
-                     <div className="grid grid-cols-1 xl:grid-cols-5 gap-5 h-full min-h-[300px]">
+                     <div className={`rounded-[1.75rem] p-3 sm:p-4 lg:p-5 border backdrop-blur-3xl shadow-lg transition-all h-full ${
+                       isDarkMode ? 'bg-[#07101f]/60 border-white/10 shadow-black/20' : 'bg-white/55 border-white/70 shadow-slate-300/40'
+                     }`}>
+                     <div className="grid grid-cols-1 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5 h-full min-h-[300px]">
                         
-                        <div className={`xl:col-span-3 rounded-[1.5rem] p-6 border backdrop-blur-3xl flex flex-col shadow-lg shadow-black/20 transition-all relative overflow-hidden
+                        <div className={`xl:col-span-3 rounded-[1.25rem] sm:rounded-[1.5rem] p-4 sm:p-5 lg:p-6 border backdrop-blur-3xl flex flex-col shadow-lg shadow-black/20 transition-all relative overflow-hidden
                            ${isDarkMode ? 'bg-[#0f172a]/30 border-white/10' : 'bg-white/40 border-white/60'}`}
                         >
-                           <div className="absolute top-0 right-0 pr-4 py-2 bg-[#1e1b4b]/60 backdrop-blur-md rounded-bl-3xl rounded-tr-[1.5rem] flex items-center shadow-md z-20">
+                           <div className="absolute top-0 right-0 max-w-[75%] px-3 sm:pr-4 py-2 bg-[#1e1b4b]/60 backdrop-blur-md rounded-bl-3xl rounded-tr-[1.25rem] sm:rounded-tr-[1.5rem] flex items-center shadow-md z-20">
                               <input 
                                 value={sub.name} 
                                 onChange={e => updateSubjectField(sub.id, 'name', e.target.value)} 
                                 placeholder="Subject Name..."
-                                className="bg-transparent text-sm font-black tracking-widest text-[#84c8fc] outline-none text-right placeholder:text-[#84c8fc]/30 w-40 focus:border-b focus:border-[#84c8fc]/50"
+                                className="bg-transparent text-xs sm:text-sm font-black tracking-widest text-[#84c8fc] outline-none text-right placeholder:text-[#84c8fc]/30 w-full focus:border-b focus:border-[#84c8fc]/50"
                               />
                            </div>
 
@@ -944,20 +952,20 @@ function WeeklyConfig({ plan, setPlan, playlists, isDarkMode, todayDay, onSync }
                              <h3 className={`text-base font-black uppercase tracking-widest ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>To Do List</h3>
                            </div>
                            
-                           <div className="flex flex-col gap-2 flex-1 overflow-y-auto custom-scrollbar pr-2 max-h-[250px] relative z-10">
+                           <div className="flex flex-col gap-2 flex-1 overflow-y-auto custom-scrollbar pr-1 sm:pr-2 max-h-[250px] relative z-10">
                               {(sub.tasks || []).length === 0 && <p className="text-slate-500 italic text-xs font-semibold">Start adding tasks below.</p>}
                               {(sub.tasks || []).map(task => (
-                                 <div key={task.id} className={`flex items-center justify-between px-4 py-2.5 rounded-xl transition-all border ${isDarkMode ? 'bg-white/5 border-white/5' : 'bg-white/50 border-slate-200 shadow-sm'}`}>
-                                    <div className="flex items-center gap-3">
+                                 <div key={task.id} className={`flex items-start justify-between gap-3 px-3 sm:px-4 py-2.5 rounded-xl transition-all border ${isDarkMode ? 'bg-white/5 border-white/5' : 'bg-white/50 border-slate-200 shadow-sm'}`}>
+                                    <div className="flex items-start gap-3 min-w-0">
                                       <Square className={`w-4 h-4 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`} />
-                                      <span className={`text-sm font-medium ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>{task.text}</span>
+                                      <span className={`text-xs sm:text-sm font-medium break-words ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>{task.text}</span>
                                     </div>
                                     <button onClick={() => deleteTask(sub.id, task.id)} className="text-slate-500 hover:text-red-500 transition-colors p-1.5"><X className="w-4 h-4" /></button>
                                  </div>
                               ))}
                            </div>
 
-                          <div className="mt-4 flex items-center gap-3 relative z-10 border-t border-white/10 pt-4">
+                          <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 relative z-10 border-t border-white/10 pt-4">
                             <input 
                               value={taskInputs[sub.id]?.text || ''}
                               onChange={e => setTaskInputs({...taskInputs, [sub.id]: { ...taskInputs[sub.id], text: e.target.value }})}
@@ -972,21 +980,21 @@ function WeeklyConfig({ plan, setPlan, playlists, isDarkMode, todayDay, onSync }
                               isDarkMode={isDarkMode}
                             />
 
-                            <button onClick={() => handleAddTask(sub.id)} className="px-4 py-2.5 rounded-xl flex items-center justify-center gap-2 font-bold text-sm bg-[#5eead4] hover:bg-[#2dd4bf] text-slate-900 shadow-md transition-colors shrink-0">
+                            <button onClick={() => handleAddTask(sub.id)} className="w-full sm:w-auto px-4 py-2.5 rounded-xl flex items-center justify-center gap-2 font-bold text-sm bg-[#5eead4] hover:bg-[#2dd4bf] text-slate-900 shadow-md transition-colors shrink-0">
                               <Plus className="w-4 h-4" /> Add
                             </button>
                           </div>
                         </div>
 
-                        <div className="xl:col-span-2 flex flex-col gap-5 relative">
+                        <div className="xl:col-span-2 flex flex-col gap-3 sm:gap-5 relative">
                            
-                           <div className={`flex-1 rounded-[1.5rem] p-5 lg:p-6 border backdrop-blur-3xl flex flex-col shadow-lg shadow-black/20 transition-all relative ${openCourseSelect === sub.id ? 'z-50' : 'z-10'} ${isDarkMode ? 'bg-[#0f172a]/30 border-white/10' : 'bg-white/40 border-white/60'}`}>
+                           <div className={`flex-1 rounded-[1.25rem] sm:rounded-[1.5rem] p-4 sm:p-5 lg:p-6 border backdrop-blur-3xl flex flex-col shadow-lg shadow-black/20 transition-all relative ${openCourseSelect === sub.id ? 'z-50' : 'z-10'} ${isDarkMode ? 'bg-[#0f172a]/30 border-white/10' : 'bg-white/40 border-white/60'}`}>
                               <h3 className={`text-sm font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Featured Course</h3>
                               
                               <div className="relative mb-4 z-20">
                                  <button 
                                    onClick={() => setOpenCourseSelect(openCourseSelect === sub.id ? null : sub.id)}
-                                   className={`w-full p-3.5 pr-4 rounded-xl border text-sm font-bold outline-none flex justify-between items-center transition-all shadow-md backdrop-blur-md ${isDarkMode ? 'bg-[#151E32]/80 border-white/10 text-white hover:border-blue-500/50' : 'bg-white border-slate-200 text-slate-800 hover:border-blue-400'}`}
+                                   className={`w-full p-3 pr-4 rounded-xl border text-xs sm:text-sm font-bold outline-none flex justify-between items-center gap-3 transition-all shadow-md backdrop-blur-md ${isDarkMode ? 'bg-[#151E32]/80 border-white/10 text-white hover:border-blue-500/50' : 'bg-white border-slate-200 text-slate-800 hover:border-blue-400'}`}
                                  >
                                     <span className="truncate">{course ? course.title : '-- Choose a Local Course --'}</span>
                                     <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${openCourseSelect === sub.id ? 'rotate-180' : ''} ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`} />
@@ -1022,7 +1030,7 @@ function WeeklyConfig({ plan, setPlan, playlists, isDarkMode, todayDay, onSync }
                               </div>
 
                               {course ? (
-                                 <div className="flex flex-row items-center gap-4 p-3 rounded-xl border border-white/5 bg-black/20 backdrop-blur-sm">
+                                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 rounded-xl border border-white/5 bg-black/20 backdrop-blur-sm">
                                     <div className="w-20 h-12 rounded-lg bg-slate-800 overflow-hidden relative shrink-0 shadow-sm border border-white/5">
                                        {course.cover ? <img src={course.cover} className="w-full h-full object-cover" alt="cover" /> : <div className="w-full h-full flex items-center justify-center"><PlayCircle className="w-5 h-5 text-blue-500" /></div>}
                                     </div>
@@ -1039,10 +1047,10 @@ function WeeklyConfig({ plan, setPlan, playlists, isDarkMode, todayDay, onSync }
                               )}
                            </div>
 
-                           <div className={`rounded-[1.5rem] p-5 lg:p-6 border backdrop-blur-3xl shadow-lg shadow-black/20 transition-all relative z-10 ${isDarkMode ? 'bg-[#0f172a]/30 border-white/10' : 'bg-white/40 border-white/60'}`}>
+                           <div className={`rounded-[1.25rem] sm:rounded-[1.5rem] p-4 sm:p-5 lg:p-6 border backdrop-blur-3xl shadow-lg shadow-black/20 transition-all relative z-10 ${isDarkMode ? 'bg-[#0f172a]/30 border-white/10' : 'bg-white/40 border-white/60'}`}>
                               <h3 className={`text-sm font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Action Links</h3>
                               
-                              <div className="flex items-center justify-between gap-3">
+                              <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-2 gap-3">
                                  {linkTypes.map(lt => {
                                     const isActive = editingLink[sub.id] === lt.key;
                                     const hasData = sub.actionUrls?.[lt.key]?.url || sub.actionUrls?.[lt.key]?.label;
@@ -1050,7 +1058,7 @@ function WeeklyConfig({ plan, setPlan, playlists, isDarkMode, todayDay, onSync }
                                       <button 
                                         key={lt.key}
                                         onClick={() => setEditingLink({...editingLink, [sub.id]: isActive ? null : lt.key})}
-                                        className={`p-3.5 rounded-full border transition-all relative
+                                        className={`p-3 rounded-2xl border transition-all relative flex items-center justify-center
                                           ${isActive ? (isDarkMode ? 'bg-white/20 border-white/50 text-white shadow-lg' : 'bg-slate-200 border-slate-400 text-slate-900 shadow-md') : 
                                            hasData ? (isDarkMode ? 'bg-white/5 border-white/20 hover:bg-white/10 text-white' : 'bg-white/80 border-slate-300 hover:bg-white text-slate-800') : 
                                            (isDarkMode ? 'bg-transparent border-white/5 hover:bg-white/5 text-slate-500' : 'bg-transparent border-slate-200 hover:bg-slate-100 text-slate-400')}
@@ -1100,6 +1108,7 @@ function WeeklyConfig({ plan, setPlan, playlists, isDarkMode, todayDay, onSync }
                            </div>
 
                         </div>
+                     </div>
                      </div>
                   </div>
                );

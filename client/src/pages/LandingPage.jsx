@@ -125,36 +125,36 @@ export default function LandingPage({ playlists, onViewCourses, onOpen, userData
       />
 
       {/* 1. HERO SECTION */}
-      <div className="relative pt-24 pb-40 overflow-hidden bg-gradient-to-br from-[#0F172A] to-[#1E293B] text-white">
+      <div className="relative pt-16 sm:pt-20 lg:pt-24 pb-24 sm:pb-32 lg:pb-40 overflow-hidden bg-gradient-to-br from-[#0F172A] to-[#1E293B] text-white">
 
         {/* Subtle Radial Highlight */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.12),transparent_60%)] pointer-events-none" />
         
         {/* Hero Content */}
-        <div className="w-[96%] max-w-[1600px] mx-auto relative z-10 flex flex-col md:flex-row items-center justify-between" >
-          <div className="md:w-1/2 text-left pt-10 pr-8">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.15] mb-6 text-white">
+        <div className="w-[96%] max-w-[1600px] mx-auto relative z-10 flex flex-col md:flex-row items-center justify-between gap-10" >
+          <div className="w-full md:w-1/2 text-left pt-4 sm:pt-8 md:pt-10 md:pr-8">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.15] mb-6 text-white">
               Your Professional <br/> Learning Workspace
             </h1>
             <p className="text-base md:text-lg font-medium leading-relaxed mb-10 max-w-xl text-slate-400">
               Take control of your learning path with a clean, structured productivity system designed for serious learners.
             </p>
-            <div className="flex flex-col sm:flex-row items-start gap-4">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-start gap-4">
               <button 
                 onClick={scrollToCourses}
-                className="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold text-sm px-8 py-3.5 shadow-sm hover:shadow-md transform transition-all duration-200 hover:scale-105 rounded-xl"
+                className="w-full sm:w-auto bg-indigo-500 hover:bg-indigo-600 text-white font-semibold text-sm px-8 py-3.5 shadow-sm hover:shadow-md transform transition-all duration-200 hover:scale-105 rounded-xl"
               >
                 Access Library
               </button>
               <button 
                 onClick={() => navigate('/goals')}
-                className="bg-slate-800 border border-slate-700 hover:bg-slate-700 text-white font-semibold text-sm px-8 py-3.5 shadow-sm transform transition-all duration-200 rounded-xl"
+                className="w-full sm:w-auto bg-slate-800 border border-slate-700 hover:bg-slate-700 text-white font-semibold text-sm px-8 py-3.5 shadow-sm transform transition-all duration-200 rounded-xl"
               >
                 Explore Goals
               </button>
             </div>
           </div>
-          <div className="md:w-2/5 mt-16 md:mt-0 flex justify-center md:justify-end relative opacity-90 hover:-translate-y-2 transition-transform duration-700">
+          <div className="w-full md:w-2/5 mt-4 md:mt-0 flex justify-center md:justify-end relative opacity-90 hover:-translate-y-2 transition-transform duration-700">
             <div className="w-full max-w-2xl transform scale-100">
                <HeroIllustration />
             </div>
@@ -163,7 +163,7 @@ export default function LandingPage({ playlists, onViewCourses, onOpen, userData
       </div>
 
       {/* 2. DAILY SNAPSHOT WIDGET */}
-      <div className="w-[96%] max-w-[1600px] mx-auto -mt-10 relative z-20 ">
+      <div className="w-[96%] max-w-[1600px] mx-auto -mt-8 sm:-mt-10 relative z-20 ">
          <div className={`p-5 rounded-2xl shadow-lg border grid grid-cols-1 md:grid-cols-3 gap-6 divide-y md:divide-y-0 md:divide-x ${isDarkMode ? 'bg-[#1E293B] border-white/10 divide-white/5' : 'bg-white border-slate-200 divide-slate-100'}`}>
             
             <div className="flex items-center gap-4 md:px-4">
@@ -287,12 +287,12 @@ export default function LandingPage({ playlists, onViewCourses, onOpen, userData
       {/* 6. COURSE GRID */}
       <div className={`py-20 border-t transition-colors duration-300 ${isDarkMode ? 'bg-[#0F172A] border-white/5' : 'bg-[#F8FAFC] border-slate-200'}`} id="courses-section">
         <div className="w-[96%] max-w-[1600px] mx-auto">
-          <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
              <h2 className={`text-2xl font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Recent Courses</h2>
-             <div className="flex gap-4">
+             <div className="grid w-full sm:w-auto grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                <button 
                   onClick={onViewCourses}
-                  className={`flex items-center gap-2 border px-6 py-2.5 rounded-xl font-semibold text-sm transition-all hover:-translate-y-0.5 hover:shadow-sm ${isDarkMode ? 'bg-[#1E293B] text-slate-300 border-white/10 hover:border-slate-500' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'}`}
+                  className={`flex items-center justify-center gap-2 border px-6 py-2.5 rounded-xl font-semibold text-sm transition-all hover:-translate-y-0.5 hover:shadow-sm ${isDarkMode ? 'bg-[#1E293B] text-slate-300 border-white/10 hover:border-slate-500' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'}`}
                 >
                   <LayoutGrid className="w-4 h-4" />
                   <span>Library</span>
@@ -300,7 +300,7 @@ export default function LandingPage({ playlists, onViewCourses, onOpen, userData
 
                <button 
                   onClick={onAdd}
-                  className="flex items-center gap-2 text-white px-6 py-2.5 rounded-xl font-semibold text-sm shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 bg-indigo-500 hover:bg-indigo-600"
+                  className="flex items-center justify-center gap-2 text-white px-6 py-2.5 rounded-xl font-semibold text-sm shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 bg-indigo-500 hover:bg-indigo-600"
                 >
                   <Plus className="w-4 h-4" />
                   Add New
@@ -346,17 +346,17 @@ export default function LandingPage({ playlists, onViewCourses, onOpen, userData
              <h2 className="text-3xl md:text-4xl font-bold mb-6">Built for Focused Learning</h2>
              <p className="text-lg text-slate-400 leading-relaxed mb-10">
                       Course Flow brings together your learning and planning into one distraction-free environment — so you can focus on understanding, not managing tools             </p>
-             <div className="flex items-center gap-8 py-6 border-t border-white/5 w-full justify-center">
+             <div className="flex flex-col sm:flex-row items-center gap-5 sm:gap-8 py-6 border-t border-white/5 w-full justify-center">
                 <div className="flex flex-col items-center">
                    <span className="text-2xl font-black text-white">Stay</span>
                    <span className="text-xs uppercase tracking-widest text-slate-500 font-bold mt-1">Consistent</span>
                 </div>
-                <div className="w-px h-10 bg-white/10" />
+                <div className="hidden sm:block w-px h-10 bg-white/10" />
                 <div className="flex flex-col items-center">
                    <span className="text-2xl font-black text-white">Learn</span>
                    <span className="text-xs uppercase tracking-widest text-slate-500 font-bold mt-1">Faster</span>
                 </div>
-                <div className="w-px h-10 bg-white/10" />
+                <div className="hidden sm:block w-px h-10 bg-white/10" />
                 <div className="flex flex-col items-center">
                    <span className="text-2xl font-black text-white">Track</span>
                    <span className="text-xs uppercase tracking-widest text-slate-500 font-bold mt-1">Progress</span>
