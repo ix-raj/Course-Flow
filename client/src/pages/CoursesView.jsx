@@ -220,7 +220,6 @@ export default function CoursesView({
                   onDelete={onDelete} 
                   onEdit={onEdit}
                   isDarkMode={isDarkMode}
-                  // Fix Issue 5: Safe userData access with a fallback object
                   userData={userData?.[playlist.id] || {}} 
                 />
               ))}

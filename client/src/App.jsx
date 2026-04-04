@@ -192,6 +192,25 @@ function AppContent() {
     const isVideo = (file) => (file.type || '').startsWith('video/') || /\.(mp4|webm|ogg|mkv|avi|mov|wmv|m4v)$/i.test(file.name);
     const isNote = (file) => file.type === 'application/pdf' || (file.type || '').startsWith('text/') || /\.(pdf|txt|md|doc|docx)$/i.test(file.name);
     
+    const tempId = `temp-${Date.now()}`;
+    const optimisticPlaylist = {
+      id: tempId,
+      _id: tempId,
+      title: meta.title,
+      description: meta.description,
+      cover: meta.cover,
+      folderName: meta.folderName,
+      videoCount: files.filter(isVideo).length,
+      noteCount: files.filter(isNote).length,
+      createdAt: new Date().toISOString(),
+      isPending: true
+    };
+
+    setPlaylists(prev => [optimisticPlaylist, ...prev]);
+    setSessionFiles(prev => ({ ...prev, [tempId]: fileList }));
+    setIsAddModalOpen(false);
+    navigate('/library');
+
     try {
       const payload = {
         title: meta.title, description: meta.description, cover: meta.cover, 
@@ -201,24 +220,43 @@ function AppContent() {
       const { data } = await api.post('/courses', payload);
       const newPlaylist = { ...data, id: data._id };
 
-      setPlaylists(prev => [newPlaylist, ...prev]);
-      setSessionFiles(prev => ({ ...prev, [newPlaylist.id]: fileList }));
-      setIsAddModalOpen(false);
-      navigate('/library'); 
+      setPlaylists(prev => prev.map(playlist => (
+        playlist.id === tempId ? newPlaylist : playlist
+      )));
+      setSessionFiles(prev => {
+        const updatedFiles = { ...prev, [newPlaylist.id]: prev[tempId] || fileList };
+        delete updatedFiles[tempId];
+        return updatedFiles;
+      });
 
     } catch (err) {
       console.error(err);
+      setPlaylists(prev => prev.filter(playlist => playlist.id !== tempId));
+      setSessionFiles(prev => {
+        const updatedFiles = { ...prev };
+        delete updatedFiles[tempId];
+        return updatedFiles;
+      });
       alert("Failed to create course in cloud database.");
     }
   };
 
   const handleUpdatePlaylist = async (id, updates) => {
+    let previousPlaylist = null;
+
+    setPlaylists(prev => prev.map(p => {
+      if (p.id !== id) return p;
+      previousPlaylist = p;
+      return { ...p, ...updates };
+    }));
+    setEditingPlaylist(null);
+
     try {
       await api.put(`/courses/${id}`, updates);
-      
-      setPlaylists(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
-      setEditingPlaylist(null);
     } catch (err) {
+      if (previousPlaylist) {
+        setPlaylists(prev => prev.map(p => p.id === id ? previousPlaylist : p));
+      }
       console.error("Failed to update course in cloud", err);
       alert("Failed to save changes. The image might be too large.");
     }

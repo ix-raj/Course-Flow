@@ -10,14 +10,15 @@ export default function AddPlaylistModal({ onCancel, onSubmit, onHome }) {
   const [title, setTitle] = useState('');
   const [desc, setDesc] = useState('');
   const [cover, setCover] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleFolderSelect = async () => {
     try {
       const handle = await openDirectory();
       if (!handle) return; 
 
-      setLoading(true);
+      setIsScanning(true);
       
       const fileList = await scanDirectory(handle);
       
@@ -33,7 +34,7 @@ export default function AddPlaylistModal({ onCancel, onSubmit, onHome }) {
       console.error("Failed to load folder:", error);
       alert("Error loading folder. Please try again.");
     } finally {
-      setLoading(false);
+      setIsScanning(false);
     }
   };
 
@@ -46,14 +47,15 @@ export default function AddPlaylistModal({ onCancel, onSubmit, onHome }) {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!files || !title) return;
 
-    setLoading(true);
-    setTimeout(() => {
-        onSubmit({ title, description: desc, cover, folderName }, files);
-        setLoading(false);
-    }, 800);
+    try {
+      setIsSubmitting(true);
+      await onSubmit({ title, description: desc, cover, folderName }, files);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -65,7 +67,7 @@ export default function AddPlaylistModal({ onCancel, onSubmit, onHome }) {
       </div>
 
       <div className="bg-white rounded-2xl max-w-lg w-full p-8 shadow-2xl relative mt-12">
-        <button onClick={onCancel} className="absolute top-4 right-4 text-slate-400 hover:text-slate-800">
+        <button onClick={onCancel} disabled={isSubmitting} className="absolute top-4 right-4 text-slate-400 hover:text-slate-800 disabled:opacity-50">
             <X className="h-6 w-6" />
         </button>
         
@@ -76,12 +78,12 @@ export default function AddPlaylistModal({ onCancel, onSubmit, onHome }) {
         {step === 1 && (
           <div className="flex flex-col gap-4">
 
-            <button 
+              <button 
               onClick={handleFolderSelect}
-              disabled={loading}
+              disabled={isScanning || isSubmitting}
               className="text-center py-10 border-2 border-dashed border-slate-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all group cursor-pointer w-full flex flex-col items-center justify-center"
             >
-              {loading ? (
+              {isScanning ? (
                 <div className="flex flex-col items-center animate-pulse">
                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
                      <Upload className="h-8 w-8 text-blue-600 animate-bounce" />
@@ -106,12 +108,12 @@ export default function AddPlaylistModal({ onCancel, onSubmit, onHome }) {
           <div className="space-y-5">
             <div>
                 <label className="block text-sm font-bold text-slate-700 mb-1.5">Course Title</label>
-                <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-slate-900 font-medium focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none" />
+                <input type="text" value={title} disabled={isSubmitting} onChange={(e) => setTitle(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-slate-900 font-medium focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none disabled:opacity-70" />
             </div>
             
             <div>
                 <label className="block text-sm font-bold text-slate-700 mb-1.5">Description</label>
-                <textarea value={desc} onChange={(e) => setDesc(e.target.value)} rows={3} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-slate-900 font-medium focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none" placeholder="What will you learn?" />
+                <textarea value={desc} disabled={isSubmitting} onChange={(e) => setDesc(e.target.value)} rows={3} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-slate-900 font-medium focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none disabled:opacity-70" placeholder="What will you learn?" />
             </div>
             
             <div>
@@ -120,18 +122,23 @@ export default function AddPlaylistModal({ onCancel, onSubmit, onHome }) {
                     <div className="h-16 w-24 bg-slate-100 rounded-lg overflow-hidden border border-slate-200 flex items-center justify-center shrink-0">
                         {cover ? <img src={cover} alt="Preview" className="h-full w-full object-cover" /> : <Video className="text-slate-400" />}
                     </div>
-                    <input type="file" accept="image/*" onChange={handleCoverSelect} className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+                    <input type="file" accept="image/*" disabled={isSubmitting} onChange={handleCoverSelect} className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 disabled:opacity-70" />
                 </div>
             </div>
             
             <div className="pt-6 flex justify-end gap-3">
-                <button onClick={() => setStep(1)} className="px-5 py-2.5 rounded-lg text-slate-600 font-bold hover:bg-slate-100 transition-colors">Back</button>
+                <button onClick={() => setStep(1)} disabled={isSubmitting} className="px-5 py-2.5 rounded-lg text-slate-600 font-bold hover:bg-slate-100 transition-colors disabled:opacity-50">Back</button>
                 <button 
                     onClick={handleSubmit} 
-                    disabled={loading || !title} 
-                    className="px-6 py-2.5 bg-[#06142e] hover:bg-blue-900 text-white rounded-lg font-bold shadow-lg shadow-blue-900/20 flex items-center transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isSubmitting || !title} 
+                    className="min-w-[168px] px-6 py-2.5 bg-[#06142e] hover:bg-blue-900 text-white rounded-lg font-bold shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    {loading ? 'Creating...' : 'Create Playlist'}
+                    {isSubmitting ? (
+                      <>
+                        <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                        Creating...
+                      </>
+                    ) : 'Create Playlist'}
                 </button>
             </div>
           </div>

@@ -5,6 +5,7 @@ export default function EditPlaylistModal({ playlist, onCancel, onSave }) {
   const [title, setTitle] = useState(playlist.title);
   const [desc, setDesc] = useState(playlist.description || '');
   const [cover, setCover] = useState(playlist.cover);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleCoverSelect = (e) => {
     const file = e.target.files[0];
@@ -15,15 +16,20 @@ export default function EditPlaylistModal({ playlist, onCancel, onSave }) {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!title.trim()) return;
-    onSave(playlist.id, { title, description: desc, cover });
+    try {
+      setIsSaving(true);
+      await onSave(playlist.id, { title, description: desc, cover });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
     <div className="fixed inset-0 bg-[#06142e] backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-2xl max-w-lg w-full p-8 shadow-2xl relative animate-in fade-in zoom-in duration-200">
-        <button onClick={onCancel} className="absolute top-4 right-4 text-slate-400 hover:text-slate-800 transition-colors">
+        <button onClick={onCancel} disabled={isSaving} className="absolute top-4 right-4 text-slate-400 hover:text-slate-800 transition-colors disabled:opacity-50">
             <X className="h-6 w-6" />
         </button>
         
@@ -36,8 +42,9 @@ export default function EditPlaylistModal({ playlist, onCancel, onSave }) {
                 <input 
                   type="text" 
                   value={title} 
+                  disabled={isSaving}
                   onChange={(e) => setTitle(e.target.value)} 
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-slate-900 font-medium focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none" 
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-slate-900 font-medium focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none disabled:opacity-70" 
                 />
             </div>
             
@@ -45,9 +52,10 @@ export default function EditPlaylistModal({ playlist, onCancel, onSave }) {
                 <label className="block text-sm font-bold text-slate-700 mb-1.5">Description</label>
                 <textarea 
                   value={desc} 
+                  disabled={isSaving}
                   onChange={(e) => setDesc(e.target.value)} 
                   rows={3} 
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-slate-900 font-medium focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none resize-none" 
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-slate-900 font-medium focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none resize-none disabled:opacity-70" 
                 />
             </div>
             
@@ -69,8 +77,9 @@ export default function EditPlaylistModal({ playlist, onCancel, onSave }) {
                        <input 
                          type="file" 
                          accept="image/*" 
+                         disabled={isSaving}
                          onChange={handleCoverSelect} 
-                         className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer" 
+                         className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer disabled:opacity-70" 
                        />
                        <p className="text-xs text-slate-400 mt-2">Recommended: 16:9 aspect ratio</p>
                     </div>
@@ -78,14 +87,23 @@ export default function EditPlaylistModal({ playlist, onCancel, onSave }) {
             </div>
             
             <div className="pt-6 flex justify-end gap-3 border-t border-slate-100 mt-2">
-                <button onClick={onCancel} className="px-5 py-2.5 rounded-lg text-slate-600 font-bold hover:bg-slate-100 transition-colors">Cancel</button>
+                <button onClick={onCancel} disabled={isSaving} className="px-5 py-2.5 rounded-lg text-slate-600 font-bold hover:bg-slate-100 transition-colors disabled:opacity-50">Cancel</button>
                 <button 
                     onClick={handleSubmit} 
-                    disabled={!title.trim()} 
-                    className="px-6 py-2.5 bg-[#06142e] hover:bg-blue-900 text-white rounded-lg font-bold shadow-lg shadow-blue-900/20 flex items-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isSaving || !title.trim()} 
+                    className="min-w-[160px] px-6 py-2.5 bg-[#06142e] hover:bg-blue-900 text-white rounded-lg font-bold shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    <Save className="w-4 h-4 " />
-                    Save Changes
+                    {isSaving ? (
+                      <>
+                        <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4 " />
+                        Save Changes
+                      </>
+                    )}
                 </button>
             </div>
         </div>
