@@ -16,14 +16,26 @@ export default function AuthPage({ isDarkMode, setIsDarkMode }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
-    
-    const success = isLogin 
-      ? await login(email, password)
-      : await register(email, password);
+    if (isLoading) return; 
+    setError(""); 
+      try {
+        setIsLoading(true); 
+        if (password.length < 6) {
+          throw new Error("Password must be at least 6 characters");
+        }
 
-    setIsLoading(false);
-    if (success) navigate('/');
+        const success = isLogin 
+          ? await login(email, password) 
+          : await register(email, password);
+
+        if (success) {
+          navigate('/', { replace: true }); 
+        }
+      } catch (err) {
+        setError(err.response?.data?.message || err.message || "Authentication failed");
+      } finally {
+        setIsLoading(false);
+      }
   };
 
   const toggleMode = () => {
@@ -158,7 +170,7 @@ export default function AuthPage({ isDarkMode, setIsDarkMode }) {
                 <div className="relative group">
                   <Mail className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${isDarkMode ? 'text-slate-500 group-focus-within:text-indigo-400' : 'text-slate-400 group-focus-within:text-indigo-500'}`} />
                   <input 
-                    type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
+                    type="email" required value={email} onChange={(e) => setEmail(e.target.value)} disabled={isLoading} autoComplete="email"  
                     placeholder="Email address"
                     className={`w-full pl-10 pr-4 py-3 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all border ${isDarkMode ? 'bg-[#0F172A]/50 border-white/5 text-white placeholder:text-slate-500' : 'bg-white/80 border-slate-200 text-slate-900 placeholder:text-slate-400'}`}
                   />
@@ -169,7 +181,7 @@ export default function AuthPage({ isDarkMode, setIsDarkMode }) {
                 <div className="relative group">
                   <Lock className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${isDarkMode ? 'text-slate-500 group-focus-within:text-indigo-400' : 'text-slate-400 group-focus-within:text-indigo-500'}`} />
                   <input 
-                    type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
+                    type="password" value={password} onChange={(e) => setPassword(e.target.value)} disabled={isLoading}  autoComplete={isLogin ? "current-password" : "new-password"} required
                     placeholder="Password"
                     className={`w-full pl-10 pr-4 py-3 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all border ${isDarkMode ? 'bg-[#0F172A]/50 border-white/5 text-white placeholder:text-slate-500' : 'bg-white/80 border-slate-200 text-slate-900 placeholder:text-slate-400'}`}
                   />

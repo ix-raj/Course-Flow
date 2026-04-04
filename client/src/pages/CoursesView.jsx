@@ -24,25 +24,38 @@ export default function CoursesView({
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
   // --- EFFECT: SEARCH DEBOUNCE ---
-  // Delays the filtering logic until the user stops typing to maintain fluid UI
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(searchQuery), 300);
     return () => clearTimeout(handler);
   }, [searchQuery]);
 
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === "Escape") {
+        setShowSortMenu(false);
+        setShowGridMenu(false);
+      }
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc); // Cleanup
+  }, []);
+
   // --- LOGIC: FILTER & SORT ---
   const filteredAndSortedPlaylists = useMemo(() => {
-    // Filter based on the debounced search term rather than raw keystrokes
-    let result = playlists.filter(p => 
-      p.title.toLowerCase().includes(debouncedSearch.toLowerCase())
+    const lowerSearch = debouncedSearch.toLowerCase();
+
+    let result = [...(playlists || [])].filter(p => 
+      p.title?.toLowerCase().includes(lowerSearch)
     );
-    
-    switch (sortOrder) {
-      case 'newest': result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); break;
-      case 'oldest': result.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)); break;
-      case 'a-z': result.sort((a, b) => a.title.localeCompare(b.title)); break;
-      default: break;
+
+    if (sortOrder === 'newest') {
+      result.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    } else if (sortOrder === 'oldest') {
+      result.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+    } else if (sortOrder === 'a-z') {
+      result.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
     }
+
     return result;
   }, [playlists, debouncedSearch, sortOrder]);
 
@@ -173,7 +186,7 @@ export default function CoursesView({
                     onClick={onAdd}
                     className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-lg transition-transform duration-200 hover:scale-105 whitespace-nowrap"
                   >
-                    <Plus className="w-4 h-4 stroke-" /> Add Course
+                    <Plus className="w-4 h-4" /> Add Course
                   </button>
 
                </div>
@@ -199,7 +212,7 @@ export default function CoursesView({
             </div>
           ) : (
             <div className={`grid ${getGridClass()} gap-5 pb-20`}>
-              {filteredAndSortedPlaylists.map(playlist => (
+             {filteredAndSortedPlaylists.map(playlist => (
                 <CourseCard 
                   key={playlist.id} 
                   playlist={playlist} 
@@ -207,7 +220,8 @@ export default function CoursesView({
                   onDelete={onDelete} 
                   onEdit={onEdit}
                   isDarkMode={isDarkMode}
-                  userData={userData[playlist.id] || {}}
+                  // Fix Issue 5: Safe userData access with a fallback object
+                  userData={userData?.[playlist.id] || {}} 
                 />
               ))}
             </div>

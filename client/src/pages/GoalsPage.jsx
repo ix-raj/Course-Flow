@@ -55,13 +55,14 @@ export default function GoalsPage({ playlists, userData, isDarkMode, setIsDarkMo
 
   // Upcoming Events
   const upcomingEvents = useMemo(() => {
-    const events = [];
-    Object.keys(monthlyEvents).forEach(date => {
-       if (date >= todayDateStr && date <= tenDaysStr) {
-          monthlyEvents[date].forEach(ev => events.push({ ...ev, date }));
-       }
-    });
-    return events.sort((a,b) => a.date.localeCompare(b.date));
+      const events = [];
+      Object.keys(monthlyEvents).forEach(date => {
+          // Check if the date is present in the 10-day window array
+          if (tenDaysStr.includes(date)) {
+              (monthlyEvents[date] || []).forEach(ev => events.push({ ...ev, date }));
+          }
+      });
+      return events.sort((a, b) => a.date.localeCompare(b.date));
   }, [monthlyEvents, todayDateStr, tenDaysStr]);
 
   useEffect(() => {
@@ -90,7 +91,7 @@ export default function GoalsPage({ playlists, userData, isDarkMode, setIsDarkMo
       const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
       
       allTodaysTasks.forEach(task => {
-        if (task.time === currentTime && !completionLog[`${todayDateStr}_${task.id}`]) {
+        if (task?.time === currentTime && !completionLog[`${todayDateStr}_${task?.id}`]) {
           const notifKey = `notified_${todayDateStr}_${task.id}`;
           if (!sessionStorage.getItem(notifKey)) {
              setReminderPopup(task);
@@ -107,17 +108,29 @@ export default function GoalsPage({ playlists, userData, isDarkMode, setIsDarkMo
   }, [allTodaysTasks, todayDateStr, completionLog]);
 
   // Tick Checkbox Handler
- const handleToggleTask = (day, subjectId, taskId) => {
-    const updatedPlan = { ...weeklyPlan };
-    const subject = updatedPlan[day].subjects.find(s => s.id === subjectId);
-    const task = subject.tasks.find(t => t.id === taskId);
-    task.done = !task.done;
+  const handleToggleTask = (day, subjectId, taskId) => {
+      setWeeklyPlan(prev => {
+          const updatedPlan = {
+              ...prev,
+              [day]: {
+                  ...prev[day],
+                  subjects: (prev[day]?.subjects || []).map(s => {
+                      if (s.id !== subjectId) return s;
+                      return {
+                          ...s,
+                          tasks: (s.tasks || []).map(t =>
+                              t.id === taskId ? { ...t, done: !t.done } : t
+                          )
+                      };
+                  })
+              }
+          };
 
-    setWeeklyPlan(updatedPlan);
-    
-    // NEW: Sync to cloud
-    onSync({ weeklyPlan: updatedPlan });
-};
+          // Sync the entire updated plan to the cloud
+          onSync({ weeklyPlan: updatedPlan });
+          return updatedPlan;
+      });
+  };
 
   return (
     <div className={`min-h-screen flex flex-col relative transition-colors duration-300 font-['Inter',sans-serif] ${isDarkMode ? 'bg-[#0B1121] text-slate-300' : 'bg-slate-50 text-slate-800'}`}>
@@ -177,6 +190,8 @@ export default function GoalsPage({ playlists, userData, isDarkMode, setIsDarkMo
              formattedToday={formattedToday}
              todayDateStr={todayDateStr}
              upcomingEvents={upcomingEvents}
+             onSync={onSync}
+
           />
         )}
 
@@ -188,6 +203,7 @@ export default function GoalsPage({ playlists, userData, isDarkMode, setIsDarkMo
               playlists={playlists} 
               isDarkMode={isDarkMode} 
               todayDay={todayDay}
+              onSync={onSync}
            />
         )}
 
@@ -198,6 +214,7 @@ export default function GoalsPage({ playlists, userData, isDarkMode, setIsDarkMo
               setEvents={setMonthlyEvents} 
               todayDateStr={todayDateStr} 
               isDarkMode={isDarkMode} 
+              onSync={onSync}
            />
         )}
       </div>
@@ -221,28 +238,29 @@ export default function GoalsPage({ playlists, userData, isDarkMode, setIsDarkMo
 
 
 // CUSTOM TIME PICKER COMPONENT
+
 function CustomTimePicker({ value, onChange, isDarkMode }) {
   const [isOpen, setIsOpen] = React.useState(false);
   const dropdownRef = React.useRef(null);
 
-  // Internal state
-  const [internalTime, setInternalTime] = React.useState("12:00");
+  // Default empty (No Time)
+  const [internalTime, setInternalTime] = React.useState("");
 
-  // Sync with parent value safely
+  // Sync with parent value
   React.useEffect(() => {
     if (typeof value === "string" && value.includes(":")) {
       const parts = value.split(":");
-  
-      const hour = String(parts[0] || "12").padStart(2, "0");
+
+      const hour = String(parts[0] || "00").padStart(2, "0");
       const minute = String(parts[1] || "00").padStart(2, "0");
-  
+
       setInternalTime(`${hour}:${minute}`);
     } else {
-      setInternalTime("12:00");
+      setInternalTime(""); // No Time
     }
   }, [value]);
 
-  // Click outside handler
+  // Close on outside click
   React.useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -254,10 +272,13 @@ function CustomTimePicker({ value, onChange, isDarkMode }) {
   }, []);
 
   // Data
-  const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, "0"));
+  const hours = Array.from({ length: 24 }, (_, i) =>
+    i.toString().padStart(2, "0")
+  );
   const minutes = ["00", "05", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55"];
 
-  const [currentHour = "12", currentMinute = "00"] = internalTime.split(":");
+  const [currentHour = "00", currentMinute = "00"] =
+    internalTime?.split(":") || [];
 
   // Handlers
   const handleHourClick = (h) => {
@@ -273,52 +294,101 @@ function CustomTimePicker({ value, onChange, isDarkMode }) {
     setIsOpen(false);
   };
 
+  const handleClearTime = () => {
+    setInternalTime("");
+    onChange && onChange("");
+    setIsOpen(false);
+  };
+
   return (
     <div className="relative" ref={dropdownRef}>
+      {/* Trigger */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={`w-[110px] px-3 py-2.5 rounded-xl border text-sm font-semibold outline-none flex items-center justify-between transition-all shadow-inner
-        ${isDarkMode ? "bg-[#0F172A]/50 border-slate-700 text-slate-300 hover:border-[#38bdf8]" : "bg-slate-50 border-slate-300 text-slate-700 hover:border-[#38bdf8]"}`}
+        ${
+          isDarkMode
+            ? "bg-[#0F172A]/50 border-slate-700 text-slate-300 hover:border-[#38bdf8]"
+            : "bg-slate-50 border-slate-300 text-slate-700 hover:border-[#38bdf8]"
+        }`}
       >
-        <span>{internalTime || "Time"}</span>
+        <span>{internalTime || "No Time"}</span>
         <Clock className="w-3.5 h-3.5 opacity-50" />
       </button>
 
+      {/* Dropdown */}
       {isOpen && (
         <div
-          className={`absolute bottom-[calc(100%+8px)] left-0 w-52 p-3 rounded-2xl border backdrop-blur-3xl z-50 shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex gap-2 animate-in fade-in zoom-in-95 duration-200
-          ${isDarkMode ? "bg-[#0B1121]/95 border-slate-700" : "bg-white/95 border-slate-200"}`}
+          className={`absolute bottom-[calc(100%+8px)] left-0 w-52 p-3 rounded-2xl border backdrop-blur-3xl z-50 shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col gap-2 animate-in fade-in zoom-in-95 duration-200
+          ${
+            isDarkMode
+              ? "bg-[#0B1121]/95 border-slate-700"
+              : "bg-white/95 border-slate-200"
+          }`}
         >
-          <div className="flex-1 h-48 overflow-y-auto custom-scrollbar flex flex-col gap-1 pr-1 border-r border-slate-500/20">
-            {hours.map((h) => (
-              <button
-                key={h}
-                onClick={() => handleHourClick(h)}
-                className={`px-2 py-1.5 rounded-lg text-xs font-bold transition-colors
-                ${currentHour === h ? "bg-[#38bdf8] text-slate-900 shadow-sm" : isDarkMode ? "text-slate-400 hover:bg-white/10 hover:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"}`}
-              >
-                {h}
-              </button>
-            ))}
+
+          {/* Time Picker */}
+          <div className="flex gap-2">
+            {/* Hours */}
+            <div className="flex-1 h-40 overflow-y-auto custom-scrollbar flex flex-col gap-1 pr-1 border-r border-slate-500/20">
+              {hours.map((h) => (
+                <button
+                  key={h}
+                  onClick={() => handleHourClick(h)}
+                  className={`px-2 py-1.5 rounded-lg text-xs font-bold transition-colors
+                  ${
+                    currentHour === h
+                      ? "bg-[#38bdf8] text-slate-900 shadow-sm"
+                      : isDarkMode
+                      ? "text-slate-400 hover:bg-white/10 hover:text-white"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                  }`}
+                >
+                  {h}
+                </button>
+              ))}
+            </div>
+
+            {/* Minutes */}
+            <div className="flex-1 h-40 overflow-y-auto custom-scrollbar flex flex-col gap-1 pl-1">
+              {minutes.map((m) => (
+                <button
+                  key={m}
+                  onClick={() => handleMinuteClick(m)}
+                  className={`px-2 py-1.5 rounded-lg text-xs font-bold transition-colors
+                  ${
+                    currentMinute === m
+                      ? "bg-[#38bdf8] text-slate-900 shadow-sm"
+                      : isDarkMode
+                      ? "text-slate-400 hover:bg-white/10 hover:text-white"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                  }`}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="flex-1 h-48 overflow-y-auto custom-scrollbar flex flex-col gap-1 pl-1">
-            {minutes.map((m) => (
-              <button
-                key={m}
-                onClick={() => handleMinuteClick(m)}
-                className={`px-2 py-1.5 rounded-lg text-xs font-bold transition-colors
-                ${currentMinute === m ? "bg-[#38bdf8] text-slate-900 shadow-sm" : isDarkMode ? "text-slate-400 hover:bg-white/10 hover:text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"}`}
-              >
-                {m}
-              </button>
-            ))}
-          </div>
+          
+          <button
+            onClick={handleClearTime}
+            className={`w-full px-3 py-2 rounded-lg text-xs font-bold transition-colors border
+              ${
+                isDarkMode
+                  ? "text-blue-400 border-red-400/30 hover:bg-red-400/10"
+                  : "text-red-600 border-red-300 hover:bg-red-50"
+              }`}
+          >
+            Clear Time
+          </button>
+          
         </div>
       )}
     </div>
   );
 }
+
 
 // ==========================================
 // DAILY VIEW
@@ -334,7 +404,8 @@ function DailyView({
   isDarkMode, 
   formattedToday, 
   todayDateStr,
-  upcomingEvents 
+  upcomingEvents,
+  onSync
 }) {
   const carouselRef = useRef(null);
   const [taskInputs, setTaskInputs] = useState({});
@@ -349,12 +420,16 @@ function DailyView({
         if(s.id !== subId) return s;
         return { ...s, tasks: [...(s.tasks||[]), { id: Date.now().toString(), text, time }] };
       });
-      return { ...prev, [todayDay]: { ...prev[todayDay], subjects: updatedSubs } };
+      const newPlan = { ...prev, [todayDay]: { ...prev[todayDay], subjects: updatedSubs } };
+      
+      onSync({ weeklyPlan: newPlan });
+      return newPlan;
     });
+
     setTaskInputs(prev => ({ ...prev, [subId]: { text: '', time: '' } }));
   };
 
-   const scrollLeft = () => {
+  const scrollLeft = () => {
     if (carouselRef.current) {
       carouselRef.current.scrollBy({ left: -window.innerWidth * 1, behavior: 'smooth' });
     }
@@ -443,7 +518,7 @@ function DailyView({
               // NEW OPTIMIZED PROGRESS LOGIC USING UTILITIES
               let progress = 0;
               if (course && course.videoCount > 0) {
-                 progress = calculateCourseProgress(course, userData[course.id]);
+                 progress = calculateCourseProgress(course, userData?.[course.id]);
               }
 
               return (
@@ -467,7 +542,7 @@ function DailyView({
                             {(sub.tasks || []).map(task => {
                                const isDone = !!completionLog[`${todayDateStr}_${task.id}`];
                                return (
-                                 <div key={task.id} onClick={() => handleToggleTask(task.id)} className={`group flex items-center justify-between px-2 py-2 rounded-xl cursor-pointer transition-all border
+                                 <div key={task.id} onClick={() => handleToggleTask(todayDay, sub.id,task.id)} className={`group flex items-center justify-between px-2 py-2 rounded-xl cursor-pointer transition-all border
                                    ${isDone 
                                      ? (isDarkMode ? 'bg-[#38bdf8]/10 border-[#38bdf8]/20' : 'bg-[#7dd3fc]/30 border-[#38bdf8]/30') 
                                      : (isDarkMode ? 'bg-transparent border-transparent hover:bg-white/5' : 'bg-transparent border-transparent hover:bg-white hover:shadow-sm')}`}
@@ -548,33 +623,31 @@ function DailyView({
                          </div>
 
                          {/* 2. QUICK ACTIONS CARD */}
-                         <div className={`rounded-[1.5rem] p-5 lg:p-6 border backdrop-blur-3xl transition-all
-                            ${isDarkMode ? 'bg-[#0f172a]/30 border-white/10 shadow-lg shadow-black/20' : 'bg-white/40 border-white/60 shadow-md'}`}
-                         >
+                         <div className={`rounded-[1.5rem] p-5 lg:p-6 border backdrop-blur-3xl transition-all ${isDarkMode ? 'bg-[#0f172a]/30 border-white/10 shadow-lg shadow-black/20' : 'bg-white/40 border-white/60 shadow-md'}`}  >
                             <h3 className={`text-sm font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Quick Actions</h3>
                             <div className="grid grid-cols-2 gap-3">
                                <button className={`flex items-center gap-3 px-4 py-2.5 rounded-full border transition-all
                                  ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-white/50 border-slate-200 hover:bg-white text-slate-700 shadow-sm'}`}>
                                   <PenTool className={`w-3.5 h-3.5 shrink-0 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`} />
-                                  <span className="text-xs font-bold truncate">Notes</span>
+                                  <span className="text-xs font-bold truncate">{sub.actionUrls?.notes?.label || "Notes"}</span>
                                </button>
 
                                <button className={`flex items-center gap-3 px-4 py-2.5 rounded-full border transition-all
                                  ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-white/50 border-slate-200 hover:bg-white text-slate-700 shadow-sm'}`}>
                                   <MessageCircleQuestion className={`w-3.5 h-3.5 shrink-0 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`} />
-                                  <span className="text-xs font-bold truncate">Resurces</span>
+                                  <span className="text-xs font-bold truncate">{sub.actionUrls?.doubts?.label || "Resources"}</span>
                                </button>
 
                                <button className={`flex items-center gap-3 px-4 py-2.5 rounded-full border transition-all
                                  ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-white/50 border-slate-200 hover:bg-white text-slate-700 shadow-sm'}`}>
                                   <Target className={`w-3.5 h-3.5 shrink-0 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`} />
-                                  <span className="text-xs font-bold truncate">Tools</span>
+                                  <span className="text-xs font-bold truncate">{sub.actionUrls?.goals?.label || "Goals"}</span>
                                </button>
 
                                <button className={`flex items-center gap-3 px-4 py-2.5 rounded-full border transition-all
                                  ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-white/50 border-slate-200 hover:bg-white text-slate-700 shadow-sm'}`}>
                                   <CalendarIcon className={`w-3.5 h-3.5 shrink-0 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`} />
-                                  <span className="text-xs font-bold truncate">Workshop</span>
+                                  <span className="text-xs font-bold truncate">{sub.actionUrls?.calendar?.label || "Workshop"}</span>
                                </button>
                             </div>
                          </div>
@@ -722,20 +795,24 @@ function WeeklyConfig({ plan, setPlan, playlists, isDarkMode, todayDay, onSync }
     onSync({ weeklyPlan: newWeeklyPlan });
   };
 
+  // Example: Add Task in Weekly View
   const handleAddTask = (subId) => {
-    const text = taskInputs[subId]?.text;
-    const time = taskInputs[subId]?.time || ''; 
-    if (!text || !text.trim()) return;
-    
-    const updatedSubs = plan[selectedDay].subjects.map(s => {
-      if(s.id !== subId) return s;
-      return { ...s, tasks: [...(s.tasks||[]), { id: Date.now().toString(), text, time }] };
-    });
-    const newWeeklyPlan = { ...plan, [selectedDay]: { ...plan[selectedDay], subjects: updatedSubs } };
-    
-    setPlan(newWeeklyPlan);
-    onSync({ weeklyPlan: newWeeklyPlan });
-    setTaskInputs(prev => ({ ...prev, [subId]: { text: '', time: '' } }));
+      const text = taskInputs[subId]?.text;
+      const time = taskInputs[subId]?.time || ''; 
+      if (!text?.trim()) return;
+      
+      setPlan(prev => {
+          const updatedSubs = (prev[selectedDay]?.subjects || []).map(s => {
+              if (s.id !== subId) return s;
+              return { ...s, tasks: [...(s.tasks || []), { id: Date.now().toString(), text, time }] };
+          });
+          const newWeeklyPlan = { ...prev, [selectedDay]: { ...prev[selectedDay], subjects: updatedSubs } };
+          
+          onSync({ weeklyPlan: newWeeklyPlan });
+          return newWeeklyPlan;
+      });
+
+      setTaskInputs(prev => ({ ...prev, [subId]: { text: '', time: '' } }));
   };
 
   const deleteTask = (subId, taskId) => {

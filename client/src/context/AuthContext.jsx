@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState,useEffect, useContext } from 'react';
 import axios from 'axios';
 
 const AuthContext = createContext();
@@ -21,6 +21,7 @@ export const AuthProvider = ({ children }) => {
     baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api', 
   });
 
+
   api.interceptors.request.use((config) => {
     const token = localStorage.getItem('cf_token');
     if (token) {
@@ -30,18 +31,13 @@ export const AuthProvider = ({ children }) => {
   });
 
   const login = async (email, password) => {
-    try {
-      setError(null);
-      const { data } = await api.post('/auth/login', { email, password });
-      
-      localStorage.setItem('cf_token', data.token);
-      localStorage.setItem('cf_user', JSON.stringify(data));
-      setUser(data);
+    const { data } = await api.post('/auth/login', { email, password });
+    if (data.token) {
+      localStorage.setItem('courseflow_token', data.token);
+      setUser(data.user);
       return true;
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to login');
-      return false;
     }
+    return false;
   };
 
   const register = async (email, password) => {
@@ -64,6 +60,20 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('cf_user');
     setUser(null);
   };
+
+  useEffect(() => {
+    const interceptor = api.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          logout(); 
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    return () => api.interceptors.response.eject(interceptor);
+  }, []);
 
   return (
     <AuthContext.Provider value={{ user, login, register, logout, loading, error, setError, api }}>
