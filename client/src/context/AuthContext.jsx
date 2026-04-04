@@ -31,13 +31,27 @@ export const AuthProvider = ({ children }) => {
   });
 
   const login = async (email, password) => {
-    const { data } = await api.post('/auth/login', { email, password });
-    if (data.token) {
-      localStorage.setItem('courseflow_token', data.token);
-      setUser(data.user);
-      return true;
+    try {
+      setLoading(true);
+      setError(null);
+
+      const { data } = await api.post('/auth/login', { email, password });
+
+      if (data.token) {
+        localStorage.setItem('cf_token', data.token);
+        localStorage.setItem('cf_user', JSON.stringify(data));
+        setUser(data);
+        return true;
+      }
+
+      return false;
+    } catch (err) {
+      console.error("LOGIN ERROR:", err);
+      setError(err.response?.data?.message || "Login failed");
+      return false;
+    } finally {
+      setLoading(false);
     }
-    return false;
   };
 
   const register = async (email, password) => {
