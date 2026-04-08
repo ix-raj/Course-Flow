@@ -413,6 +413,7 @@ function DailyView({
 }) {
   const carouselRef = useRef(null);
   const [taskInputs, setTaskInputs] = useState({});
+  const hasMultipleSubjects = (todaysData?.subjects?.length || 0) > 1;
 
   const openActionLink = useCallback((url) => {
     if (!url) return;
@@ -502,7 +503,7 @@ function DailyView({
       {/* SCROLLABLE SUBJECT PANELS (CAROUSEL) */}
       <div className="relative z-10 w-full shrink-0 group/carousel">
         
-        {(todaysData?.subjects?.length > 1) && (
+        {hasMultipleSubjects && (
           <>
             <button onClick={scrollLeft} className="hidden md:block absolute -left-4 top-1/2 -translate-y-1/2 z-20 p-2 transition-all opacity-0 group-hover/carousel:opacity-100 focus:opacity-100 hover:scale-110 text-white/50 hover:text-white drop-shadow-lg">
                <ChevronLeft className="w-12 h-12" />
@@ -513,7 +514,14 @@ function DailyView({
           </>
         )}
 
-        <div ref={carouselRef} className="w-full overflow-x-auto snap-x snap-mandatory no-scrollbar flex gap-4 sm:gap-8 lg:gap-12 pb-6 sm:pb-8 items-stretch scroll-smooth px-1 sm:px-0">
+        <div
+          ref={carouselRef}
+          className={`w-full no-scrollbar flex items-stretch pb-6 sm:pb-8 ${
+            hasMultipleSubjects
+              ? 'overflow-x-auto snap-x snap-mandatory scroll-smooth gap-4 sm:gap-8 lg:gap-12 px-1 sm:px-0'
+              : 'overflow-visible justify-center'
+          }`}
+        >
           {(!todaysData?.subjects || todaysData.subjects.length === 0) ? (
             <div className={`w-full shrink-0 p-12 rounded-[2rem] border backdrop-blur-3xl flex flex-col items-center justify-center text-center ${isDarkMode ? 'bg-[#0f172a]/30 border-white/10 shadow-lg shadow-black/20' : 'bg-white/40 border-slate-200 shadow-md'}`}>
                <LayoutGrid className={`w-12 h-12 mb-3 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`} />
@@ -531,7 +539,14 @@ function DailyView({
               }
 
               return (
-                <div key={sub.id} className="shrink-0 w-[calc(100vw-1.5rem)] sm:w-[calc(100vw-3rem)] lg:w-[calc(100vw-6rem)] max-w-[1020px] mx-1 sm:mx-4 lg:mx-6 flex flex-col snap-center">
+                <div
+                  key={sub.id}
+                  className={`flex flex-col ${
+                    hasMultipleSubjects
+                      ? 'shrink-0 snap-center w-[calc(100vw-1.5rem)] sm:w-[calc(100vw-3rem)] lg:w-[calc(100vw-6rem)] max-w-[1020px] mx-1 sm:mx-4 lg:mx-6'
+                      : 'w-full max-w-[1020px]'
+                  }`}
+                >
                    <div className={`rounded-[1.75rem] p-3 sm:p-4 lg:p-5 border backdrop-blur-3xl shadow-lg transition-all h-full ${
                      isDarkMode ? 'bg-[#07101f]/60 border-white/10 shadow-black/20' : 'bg-white/55 border-white/70 shadow-slate-300/40'
                    }`}>
