@@ -600,6 +600,7 @@ function AppContent() {
             <GoalsPage 
               playlists={playlists || []} 
               userData={userData || {}} 
+              initialProductivityData={productivityData}
               isDarkMode={isDarkMode} 
               setIsDarkMode={setIsDarkMode}
               onSync={updateProductivity} // Pass the new sync function

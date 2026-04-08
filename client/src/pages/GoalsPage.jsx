@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useMemo } from 'react';
+import React, { useRef, useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -17,25 +17,29 @@ import { getTodayDay, getTodayDateStr, formatFullDate, getFutureDateArray } from
 import { calculateCourseProgress } from '../utils/metrics';
 
 
-export default function GoalsPage({ playlists, userData, isDarkMode, setIsDarkMode, onSync }) {
+export default function GoalsPage({ playlists, userData, initialProductivityData, isDarkMode, setIsDarkMode, onSync }) {
     const navigate = useNavigate();
     const { api } = useAuth();
+    const initialWeeklyPlan = useMemo(() => initialProductivityData?.weeklyPlan || {}, [initialProductivityData]);
+    const initialCompletionLog = useMemo(() => initialProductivityData?.completionLog || {}, [initialProductivityData]);
+    const initialMonthlyEvents = useMemo(() => initialProductivityData?.monthlyEvents || {}, [initialProductivityData]);
   
   // Base States
   const [activeTab, setActiveTab] = useState('daily'); 
   
   // Data States
-  const [weeklyPlan, setWeeklyPlan] = useState({
+  const [weeklyPlan, setWeeklyPlan] = useState(() => ({
     Monday: { focus: "", subjects: [] },
     Tuesday: { focus: "", subjects: [] },
     Wednesday: { focus: "", subjects: [] },
     Thursday: { focus: "", subjects: [] },
     Friday: { focus: "", subjects: [] },
     Saturday: { focus: "", subjects: [] },
-    Sunday: { focus: "", subjects: [] }
-  });
-  const [monthlyEvents, setMonthlyEvents] = useState({});
-  const [completionLog, setCompletionLog] = useState({});
+    Sunday: { focus: "", subjects: [] },
+    ...initialWeeklyPlan
+  }));
+  const [monthlyEvents, setMonthlyEvents] = useState(() => initialMonthlyEvents);
+  const [completionLog, setCompletionLog] = useState(() => initialCompletionLog);
 
   // Floating Elements
   const [reminderPopup, setReminderPopup] = useState(null);
@@ -66,6 +70,13 @@ export default function GoalsPage({ playlists, userData, isDarkMode, setIsDarkMo
   }, [monthlyEvents, tenDaysStr]);
 
   useEffect(() => {
+    const hasInitialProductivity =
+      Object.keys(initialWeeklyPlan).length > 0 ||
+      Object.keys(initialCompletionLog).length > 0 ||
+      Object.keys(initialMonthlyEvents).length > 0;
+
+    if (hasInitialProductivity) return;
+
     const loadProductivity = async () => {
         try {
             // Use the api instance from your AuthContext if available, 
@@ -81,7 +92,7 @@ export default function GoalsPage({ playlists, userData, isDarkMode, setIsDarkMo
         }
     };
     loadProductivity();
-}, [api]);
+}, [api, initialCompletionLog, initialMonthlyEvents, initialWeeklyPlan]);
 
   // Notifications
   useEffect(() => {
@@ -403,6 +414,11 @@ function DailyView({
   const carouselRef = useRef(null);
   const [taskInputs, setTaskInputs] = useState({});
 
+  const openActionLink = useCallback((url) => {
+    if (!url) return;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }, []);
+
   const handleAddDailyTask = (subId) => {
     const text = taskInputs[subId]?.text;
     const time = taskInputs[subId]?.time || ''; 
@@ -622,25 +638,45 @@ function DailyView({
                          <div className={`rounded-[1.25rem] sm:rounded-[1.5rem] p-4 sm:p-5 lg:p-6 border backdrop-blur-3xl transition-all ${isDarkMode ? 'bg-[#0f172a]/30 border-white/10 shadow-lg shadow-black/20' : 'bg-white/40 border-white/60 shadow-md'}`}  >
                             <h3 className={`text-sm font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Quick Actions</h3>
                             <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                               <button className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 rounded-full border transition-all min-w-0
+                               <button
+                                 onClick={() => openActionLink(sub.actionUrls?.notes?.url)}
+                                 disabled={!sub.actionUrls?.notes?.url}
+                                 className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 rounded-full border transition-all min-w-0 ${
+                                   sub.actionUrls?.notes?.url ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'
+                                 }
                                  ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-white/50 border-slate-200 hover:bg-white text-slate-700 shadow-sm'}`}>
                                   <PenTool className={`w-3.5 h-3.5 shrink-0 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`} />
                                   <span className="text-xs font-bold truncate">{sub.actionUrls?.notes?.label || "Notes"}</span>
                                </button>
 
-                               <button className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 rounded-full border transition-all min-w-0
+                               <button
+                                 onClick={() => openActionLink(sub.actionUrls?.doubts?.url)}
+                                 disabled={!sub.actionUrls?.doubts?.url}
+                                 className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 rounded-full border transition-all min-w-0 ${
+                                   sub.actionUrls?.doubts?.url ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'
+                                 }
                                  ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-white/50 border-slate-200 hover:bg-white text-slate-700 shadow-sm'}`}>
                                   <MessageCircleQuestion className={`w-3.5 h-3.5 shrink-0 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`} />
                                   <span className="text-xs font-bold truncate">{sub.actionUrls?.doubts?.label || "Resources"}</span>
                                </button>
 
-                               <button className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 rounded-full border transition-all min-w-0
+                               <button
+                                 onClick={() => openActionLink(sub.actionUrls?.goals?.url)}
+                                 disabled={!sub.actionUrls?.goals?.url}
+                                 className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 rounded-full border transition-all min-w-0 ${
+                                   sub.actionUrls?.goals?.url ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'
+                                 }
                                  ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-white/50 border-slate-200 hover:bg-white text-slate-700 shadow-sm'}`}>
                                   <Target className={`w-3.5 h-3.5 shrink-0 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`} />
                                   <span className="text-xs font-bold truncate">{sub.actionUrls?.goals?.label || "Goals"}</span>
                                </button>
 
-                               <button className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 rounded-full border transition-all min-w-0
+                               <button
+                                 onClick={() => openActionLink(sub.actionUrls?.calendar?.url)}
+                                 disabled={!sub.actionUrls?.calendar?.url}
+                                 className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 rounded-full border transition-all min-w-0 ${
+                                   sub.actionUrls?.calendar?.url ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'
+                                 }
                                  ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-white/50 border-slate-200 hover:bg-white text-slate-700 shadow-sm'}`}>
                                   <CalendarIcon className={`w-3.5 h-3.5 shrink-0 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`} />
                                   <span className="text-xs font-bold truncate">{sub.actionUrls?.calendar?.label || "Workshop"}</span>
