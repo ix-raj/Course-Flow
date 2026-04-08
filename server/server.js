@@ -7,16 +7,39 @@ const app = express();
 
 connectDB();
 
-app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:5174',
-    'https://course-flow-psi.vercel.app' 
-  ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], 
+const allowedOrigins = new Set([
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'https://course-flow-psi.vercel.app',
+  ...(process.env.CLIENT_URL ? [process.env.CLIENT_URL] : []),
+  ...(process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(',').map(origin => origin.trim()).filter(Boolean)
+    : [])
+]);
+
+const corsOptions = {
+  origin(origin, callback) {
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    const normalizedOrigin = origin.replace(/\/$/, '');
+    const isVercelPreview = /^https:\/\/course-flow.*\.vercel\.app$/.test(normalizedOrigin);
+
+    if (allowedOrigins.has(normalizedOrigin) || isVercelPreview) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-}));
+  credentials: true,
+  optionsSuccessStatus: 204
+};
+
+app.use(cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
 
 // FIX: Set 50mb limit for course covers and large data syncs
 app.use(express.json({ limit: '50mb' }));
