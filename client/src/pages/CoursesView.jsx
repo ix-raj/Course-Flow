@@ -14,7 +14,7 @@ export default function CoursesView({
 }) {
   
   // --- STATE: UI CONTROLS ---
-  const [sortOrder, setSortOrder] = useState('newest'); // 'newest', 'oldest', 'a-z'
+  const [sortOrder, setSortOrder] = useState('oldest'); 
   const [gridCols, setGridCols] = useState(5);
   const [showGridMenu, setShowGridMenu] = useState(false);
   const [showSortMenu, setShowSortMenu] = useState(false);
@@ -104,7 +104,7 @@ export default function CoursesView({
               >
                
                {/* Search Input */}
-               <div className="relative w-full md:max-w-sm group">
+               <div className="relative w-[40%] md:max-w-sm group">
                   <Search className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${isDarkMode ? 'text-slate-500 group-focus-within:text-indigo-400' : 'text-slate-400 group-focus-within:text-indigo-500'}`} />
                   <input 
                     type="text" 
@@ -133,7 +133,7 @@ export default function CoursesView({
                         <div className="fixed inset-0 z-10" onClick={() => setShowSortMenu(false)}></div>
                         <div className={`absolute right-0 mt-2 w-40 rounded-xl border shadow-xl z-20 overflow-hidden animate-in fade-in zoom-in-95 duration-200
                           ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
-                          {[{id:'newest', label:'Newest First'}, {id:'oldest', label:'Oldest First'}, {id:'a-z', label:'Alphabetical'}].map(opt => (
+                          {[ {id:'oldest', label:'Oldest First'}, {id:'newest', label:'Newest First'},{id:'a-z', label:'Alphabetical'}].map(opt => (
                              <button 
                                 key={opt.id}
                                 onClick={() => { setSortOrder(opt.id); setShowSortMenu(false); }}

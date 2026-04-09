@@ -26,6 +26,7 @@ export default function GoalsPage({ playlists, userData, initialProductivityData
   
   // Base States
   const [activeTab, setActiveTab] = useState('daily'); 
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   
   // Data States
   const [weeklyPlan, setWeeklyPlan] = useState(() => ({
@@ -53,6 +54,13 @@ export default function GoalsPage({ playlists, userData, initialProductivityData
   const tenDaysStr = getFutureDateArray(10); 
   
   const todaysData = weeklyPlan[todayDay] || { focus: "", subjects: [] };
+  const goalsTabs = [
+    { id: 'daily', label: 'Daily View', mobileLabel: 'Daily', icon: CheckSquare },
+    { id: 'weekly', label: 'Weekly Plan', mobileLabel: 'Weekly', icon: LayoutGrid },
+    { id: 'monthly', label: 'Monthly Plan', mobileLabel: 'Monthly', icon: CalendarIcon }
+  ];
+  const activeTabMeta = goalsTabs.find(tab => tab.id === activeTab) || goalsTabs[0];
+  const ActiveTabIcon = activeTabMeta.icon;
   
   // Progress Logic
   const allTodaysTasks = todaysData.subjects.flatMap(s => s.tasks || []);
@@ -118,6 +126,17 @@ export default function GoalsPage({ playlists, userData, initialProductivityData
     return () => clearInterval(interval);
   }, [allTodaysTasks, todayDateStr, completionLog]);
 
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setIsMobileNavOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // Tick Checkbox Handler
   const handleToggleTask = (day, subjectId, taskId) => {
       setCompletionLog(prev => {
@@ -145,97 +164,133 @@ export default function GoalsPage({ playlists, userData, initialProductivityData
          activePage="goals" 
       />
   
-      {/* --- ANIMATED FLOATING TAB SWITCHER --- */}
-      <div className="fixed top-[90px] sm:top-3 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1.5rem)] sm:w-auto max-w-[720px] flex gap-2 rounded-full p-1 backdrop-blur-xl border  bg-white/10 border-white/10">
-
-        {[
-          { id: 'daily', label: 'Daily View', mobileLabel: 'Daily' },
-          { id: 'weekly', label: 'Weekly Plan', mobileLabel: 'Weekly' },
-          { id: 'monthly', label: 'Monthly Plan', mobileLabel: 'Monthly' }
-        ].map((tab) => {
-          const isActive = activeTab === tab.id;
-
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 sm:flex-none px-3 sm:px-5 py-2.5 rounded-full text-[11px] sm:text-xs font-semibold transition-all duration-200 text-center
-                
-                ${isActive
-                  ? 'bg-gradient-to-br from-indigo-500 to-cyan-500 text-white shadow-md'
-                  : (isDarkMode
-                      ? 'text-slate-400 hover:text-white hover:bg-white/5'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/70 shadow-sm')
-                }
-              `}
-            >
-              <span className="sm:hidden">{tab.mobileLabel}</span>
-              <span className="hidden sm:inline">{tab.label}</span>
-            </button>
-          );
-        })}
-
-      </div>
-
-      <div className="flex-1 w-[96%] max-w-[1600px] mx-auto pt-20 sm:pt-8 pb-8 flex flex-col relative z-10">
       
-        {/* --- REDESIGNED DAILY TAB VIEW --- */}
-        {activeTab === 'daily' && (
-          <DailyView 
-             todaysData={todaysData}
-             completionLog={completionLog}
-             handleToggleTask={handleToggleTask}
-             setWeeklyPlan={setWeeklyPlan}
-             todayDay={todayDay}
-             playlists={playlists}
-             userData={userData} // Passed correctly for metrics utility
-             navigate={navigate}
-             isDarkMode={isDarkMode}
-             formattedToday={formattedToday}
-             todayDateStr={todayDateStr}
-             upcomingEvents={upcomingEvents}
-             onSync={onSync}
+      <div className="flex-1 w-[96%] max-w-[1600px] mx-auto pt-1 sm:pt-3 pb-8  z-10">
+      
+        <div className="sticky top-[70px] sm:top-[80px] z-40 mb-4 sm:mb-5 mr-12">
+          <div className="flex justify-end relative">
+            <button
+              onClick={() => setIsMobileNavOpen((prev) => !prev)}
+              className={`inline-flex items-center gap-3 rounded-2xl border px-4 py-2.5 shadow-md backdrop-blur-2xl transition-all ${
+                isDarkMode
+                  ? 'bg-[#0f172a]/72 border-white/10 text-slate-100 shadow-black/10 hover:bg-[#0f172a]/82'
+                  : 'bg-white/78 border-slate-200/90 text-slate-800 shadow-slate-200/50 hover:bg-white/90'
+              }`}
+            >
+              <ActiveTabIcon className={`w-4 h-4 shrink-0 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`} />
+              <span className="text-sm font-semibold">
+                {activeTabMeta.label}
+              </span>
+              <ChevronDown
+                className={`w-4 h-4 transition-transform ${isDarkMode ? 'text-slate-500' : 'text-slate-400'} ${
+                  isMobileNavOpen ? 'rotate-180' : ''
+                }`}
+              />
+            </button>
 
-          />
-        )}
+            {isMobileNavOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-30"
+                  onClick={() => setIsMobileNavOpen(false)}
+                ></div>
+                <div
+                  className={`absolute right-0 top-[calc(100%+10px)] z-40 w-56 rounded-[1.25rem] border p-2 shadow-xl backdrop-blur-3xl ${
+                    isDarkMode
+                      ? 'bg-[#0f172a]/92 border-white/10 shadow-black/20'
+                      : 'bg-white/94 border-slate-200 shadow-slate-300/30'
+                  }`}
+                >
+                  {goalsTabs.map((tab) => {
+                    const isActive = activeTab === tab.id;
+                    const Icon = tab.icon;
 
-        {/* --- WEEKLY TAB VIEW (Redesigned Grid) --- */}
-        {activeTab === 'weekly' && (
-           <WeeklyConfig 
-              plan={weeklyPlan} 
-              setPlan={setWeeklyPlan} 
-              playlists={playlists} 
-              isDarkMode={isDarkMode} 
-              todayDay={todayDay}
-              onSync={onSync}
-           />
-        )}
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => {
+                          setActiveTab(tab.id);
+                          setIsMobileNavOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-3 rounded-[0.95rem] px-4 py-3 text-left transition-all ${
+                          isActive
+                            ? 'bg-gradient-to-r from-indigo-500 to-cyan-500 text-white shadow-sm'
+                            : isDarkMode
+                            ? 'text-slate-300 hover:bg-white/5'
+                            : 'text-slate-700 hover:bg-slate-100/90'
+                        }`}
+                      >
+                        <Icon className="w-4 h-4 shrink-0" />
+                        <p className="text-sm font-bold">{tab.label}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
 
-        {/* --- MONTHLY TAB VIEW (Redesigned Calendar & Agenda) --- */}
-        {activeTab === 'monthly' && (
-          <MonthlyConfig 
-              events={monthlyEvents} 
-              setEvents={setMonthlyEvents} 
-              todayDateStr={todayDateStr} 
-              isDarkMode={isDarkMode} 
-              onSync={onSync}
-           />
-        )}
+        <div className="min-w-0">
+            {/* --- REDESIGNED DAILY TAB VIEW --- */}
+                {activeTab === 'daily' && (
+                  <DailyView 
+                    todaysData={todaysData}
+                    completionLog={completionLog}
+                    handleToggleTask={handleToggleTask}
+                    setWeeklyPlan={setWeeklyPlan}
+                    todayDay={todayDay}
+                    playlists={playlists}
+                    userData={userData} // Passed correctly for metrics utility
+                    navigate={navigate}
+                    isDarkMode={isDarkMode}
+                    formattedToday={formattedToday}
+                    todayDateStr={todayDateStr}
+                    upcomingEvents={upcomingEvents}
+                    onSync={onSync}
+
+                  />
+                )}
+
+                {/* --- WEEKLY TAB VIEW (Redesigned Grid) --- */}
+                {activeTab === 'weekly' && (
+                  <WeeklyConfig 
+                      plan={weeklyPlan} 
+                      setPlan={setWeeklyPlan} 
+                      playlists={playlists} 
+                      isDarkMode={isDarkMode} 
+                      todayDay={todayDay}
+                      onSync={onSync}
+                  />
+                )}
+
+                {/* --- MONTHLY TAB VIEW (Redesigned Calendar & Agenda) --- */}
+                {activeTab === 'monthly' && (
+                  <MonthlyConfig 
+                      events={monthlyEvents} 
+                      setEvents={setMonthlyEvents} 
+                      todayDateStr={todayDateStr} 
+                      isDarkMode={isDarkMode} 
+                      onSync={onSync}
+                   />
+                )}
+        </div>
       </div>
 
-      {/* FLOATING ELEMENTS */}
-      {reminderPopup && (
-         <div className="fixed bottom-6 left-6 z-50 p-4 rounded-2xl bg-slate-900 border border-slate-700 shadow-[0_10px_40px_rgba(0,0,0,0.5)] flex items-center gap-4 animate-in slide-in-from-bottom-5 fade-in duration-300 max-w-sm">
-            <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
-               <Bell className="w-5 h-5 text-blue-400 animate-bounce" />
-            </div>
-            <div>
-               <p className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-1">Reminder</p>
-               <p className="text-sm font-bold text-white line-clamp-2">{reminderPopup.text}</p>
-            </div>
-            <button onClick={() => setReminderPopup(null)} className="p-1 text-slate-500 hover:text-white absolute top-2 right-2"><X className="w-4 h-4"/></button>
-         </div>
-      )}
+        {/* FLOATING ELEMENTS */}
+        {reminderPopup && (
+          <div className="fixed bottom-6 left-6 z-50 p-4 rounded-2xl bg-slate-900 border border-slate-700 shadow-[0_10px_40px_rgba(0,0,0,0.5)] flex items-center gap-4 animate-in slide-in-from-bottom-5 fade-in duration-300 max-w-sm">
+              <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
+                <Bell className="w-5 h-5 text-blue-400 animate-bounce" />
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-1">Reminder</p>
+                <p className="text-sm font-bold text-white line-clamp-2">{reminderPopup.text}</p>
+              </div>
+              <button onClick={() => setReminderPopup(null)} className="p-1 text-slate-500 hover:text-white absolute top-2 right-2"><X className="w-4 h-4"/></button>
+          </div>
+        )}
+
     </div>
   );
 }
