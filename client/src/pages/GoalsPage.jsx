@@ -279,7 +279,7 @@ export default function GoalsPage({ playlists, userData, initialProductivityData
 
         {/* FLOATING ELEMENTS */}
         {reminderPopup && (
-          <div className="fixed bottom-6 left-6 z-50 p-4 rounded-2xl bg-slate-900 border border-slate-700 shadow-[0_10px_40px_rgba(0,0,0,0.5)] flex items-center gap-4 animate-in slide-in-from-bottom-5 fade-in duration-300 max-w-sm">
+          <div className="fixed left-6 z-50 p-4 rounded-2xl bg-slate-900 border border-slate-700 shadow-[0_10px_40px_rgba(0,0,0,0.5)] flex items-center gap-4 animate-in slide-in-from-bottom-5 fade-in duration-300 max-w-sm">
               <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
                 <Bell className="w-5 h-5 text-blue-400 animate-bounce" />
               </div>
@@ -496,13 +496,13 @@ function DailyView({
 
   const scrollLeft = () => {
     if (carouselRef.current) {
-      carouselRef.current.scrollBy({ left: -window.innerWidth * 1, behavior: 'smooth' });
+      carouselRef.current.scrollBy({ left: -carouselRef.current.clientWidth, behavior: 'smooth' });
     }
   };
 
   const scrollRight = () => {
     if (carouselRef.current) {
-      carouselRef.current.scrollBy({ left: window.innerWidth * 1, behavior: 'smooth' });
+      carouselRef.current.scrollBy({ left: carouselRef.current.clientWidth, behavior: 'smooth' });
     }
   };
 
@@ -573,7 +573,7 @@ function DailyView({
           ref={carouselRef}
           className={`w-full no-scrollbar flex items-stretch pb-6 sm:pb-8 ${
             hasMultipleSubjects
-              ? 'overflow-x-auto snap-x snap-mandatory scroll-smooth gap-4 sm:gap-8 lg:gap-12 px-1 sm:px-0'
+              ? 'overflow-x-auto snap-x snap-mandatory scroll-smooth justify-start'
               : 'overflow-visible justify-center'
           }`}
         >
@@ -596,13 +596,13 @@ function DailyView({
               return (
                 <div
                   key={sub.id}
-                  className={`flex flex-col ${
+                  className={`flex ${
                     hasMultipleSubjects
-                      ? 'shrink-0 snap-center w-[calc(100vw-1.5rem)] sm:w-[calc(100vw-3rem)] lg:w-[calc(100vw-6rem)] max-w-[1020px] mx-1 sm:mx-4 lg:mx-6'
+                      ? 'w-full shrink-0 snap-center justify-center px-4 sm:px-6 lg:px-8'
                       : 'w-full max-w-[1020px]'
                   }`}
                 >
-                   <div className={`rounded-[1.75rem] p-3 sm:p-4 lg:p-5 border backdrop-blur-3xl shadow-lg transition-all h-full ${
+                   <div className={`w-full max-w-[1020px] rounded-[1.75rem] p-3 sm:p-4 lg:p-5 border backdrop-blur-3xl shadow-lg transition-all h-full ${
                      isDarkMode ? 'bg-[#07101f]/60 border-white/10 shadow-black/20' : 'bg-white/55 border-white/70 shadow-slate-300/40'
                    }`}>
                    <div className="grid grid-cols-1 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5 h-full min-h-[300px]">
