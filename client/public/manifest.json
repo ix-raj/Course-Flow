@@ -1,0 +1,13 @@
+{
+  "name": "Course Flow",
+  "short_name": "Course Flow",
+  "start_url": "/",
+  "display": "standalone",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
