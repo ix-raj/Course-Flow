@@ -167,7 +167,7 @@ export default function GoalsPage({ playlists, userData, initialProductivityData
       
       <div className="flex-1 w-[96%] max-w-[1600px] mx-auto pt-1 sm:pt-3 pb-8  z-10">
       
-        <div className="sticky top-[70px] sm:top-[80px] z-40 mb-4 sm:mb-5 mr-12">
+        <div className="sticky top-[70px] sm:top-[80px] z-40 mb-4 sm:mb-5 mr-[3%]">
           <div className="flex justify-end relative">
             <button
               onClick={() => setIsMobileNavOpen((prev) => !prev)}
