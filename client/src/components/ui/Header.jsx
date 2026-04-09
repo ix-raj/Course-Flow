@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sun, Moon, LogOut } from 'lucide-react';
+import { Sun, Moon, LogOut, Menu, X } from 'lucide-react';
 import { BrandLogo } from './BrandLogo';
 import { useAuth } from '../../context/AuthContext';
 
@@ -8,8 +8,10 @@ export function Header({ isDarkMode, setIsDarkMode, activePage, positionClass = 
   const navigate = useNavigate();
 
   const { user, logout } = useAuth();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const menuRef = useRef(null);
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const accountMenuRef = useRef(null);
+  const mobileNavRef = useRef(null);
 
   const navItems = [
     { id: 'home', label: 'Home', path: '/' },
@@ -19,8 +21,11 @@ export function Header({ isDarkMode, setIsDarkMode, activePage, positionClass = 
 
   useEffect(() => {
     function handleClickOutside(event) {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setIsMenuOpen(false);
+      if (accountMenuRef.current && !accountMenuRef.current.contains(event.target)) {
+        setIsAccountMenuOpen(false);
+      }
+      if (mobileNavRef.current && !mobileNavRef.current.contains(event.target)) {
+        setIsMobileNavOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -29,8 +34,14 @@ export function Header({ isDarkMode, setIsDarkMode, activePage, positionClass = 
 
   const handleLogout = () => {
     logout();
-    setIsMenuOpen(false);
+    setIsAccountMenuOpen(false);
+    setIsMobileNavOpen(false);
     navigate('/auth');
+  };
+
+  const handleNavigate = (path) => {
+    setIsMobileNavOpen(false);
+    navigate(path);
   };
 
   return (
@@ -68,9 +79,47 @@ export function Header({ isDarkMode, setIsDarkMode, activePage, positionClass = 
               })}
             </nav>
 
-            <div className={`w-px h-4 hidden sm:block ${isDarkMode ? 'bg-slate-800' : 'bg-slate-200'}`}></div>
+            <div className="relative sm:hidden" ref={mobileNavRef}>
+                <button
+                  onClick={() => setIsMobileNavOpen(prev => !prev)}
+                  className={` rounded-xl flex items-center justify-center transition-all `}
+                  aria-label="Open navigation menu"
+                >
+                  {isMobileNavOpen ? <Menu className="w-9 h-9 text-white/80" ></Menu> : <Menu className="w-9 h-9 text-white/40" />}
+                </button>
+
+                {isMobileNavOpen && (
+                  <div className={`absolute right-0 mt-3 w-56 rounded-2xl border shadow-xl overflow-hidden z-50 ${
+                    isDarkMode ? 'bg-[#1E293B] border-slate-700 shadow-black/50' : 'bg-white border-slate-200 shadow-slate-200/60'
+                  }`}>
+                    <div className="p-2">
+                      {navItems.map((item) => {
+                        const isActive = activePage === item.id;
+                        return (
+                          <button
+                            key={item.id}
+                            onClick={() => handleNavigate(item.path)}
+                            className={`w-full flex items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold transition-all ${
+                              isActive
+                                ? (isDarkMode ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-900')
+                                : (isDarkMode ? 'text-slate-300 hover:bg-slate-800/70' : 'text-slate-700 hover:bg-slate-50')
+                            }`}
+                          >
+                            <span>{item.label}</span>
+                            {isActive && <span className={`w-2 h-2 rounded-full ${isDarkMode ? 'bg-cyan-400' : 'bg-indigo-500'}`}></span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+            <div className={`w-px h-4  ${isDarkMode ? 'bg-slate-800' : 'bg-slate-200'}`}></div>
 
             <div className="flex items-center gap-2 sm:gap-4">
+              
+
               <button
                 onClick={() => setIsDarkMode(prev => !prev)}
                 className={`w-14 sm:w-16 h-9 flex items-center rounded-full p-1 transition-all duration-300 border ${
@@ -87,9 +136,9 @@ export function Header({ isDarkMode, setIsDarkMode, activePage, positionClass = 
               </button>
 
               {user ? (
-                <div className="relative" ref={menuRef}>
+                <div className="relative" ref={accountMenuRef}>
                   <button
-                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    onClick={() => setIsAccountMenuOpen(!isAccountMenuOpen)}
                     className={`flex items-center gap-2 rounded-full border transition-all ${
                       isDarkMode ? 'bg-[#111822] border-slate-700 hover:border-slate-500' : 'bg-white border-slate-200 hover:border-slate-300'
                     }`}
@@ -101,7 +150,7 @@ export function Header({ isDarkMode, setIsDarkMode, activePage, positionClass = 
                     </div>
                   </button>
 
-                  {isMenuOpen && (
+                  {isAccountMenuOpen && (
                     <div className={`absolute right-0 mt-4 sm:mt-8 w-64 rounded-2xl border shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 z-50 ${
                       isDarkMode ? 'bg-[#1E293B] border-slate-700 shadow-black/50' : 'bg-white border-slate-200 shadow-slate-200/50'
                     }`}>
@@ -134,24 +183,6 @@ export function Header({ isDarkMode, setIsDarkMode, activePage, positionClass = 
           </div>
         </div>
 
-        <nav className="sm:hidden grid grid-cols-3 gap-2">
-          {navItems.map((item) => {
-            const isActive = activePage === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => navigate(item.path)}
-                className={`px-3 py-2 rounded-xl text-xs font-semibold transition-colors border ${
-                  isActive
-                    ? (isDarkMode ? 'bg-slate-800 text-white border-slate-700' : 'bg-slate-100 text-slate-900 border-slate-200')
-                    : (isDarkMode ? 'bg-transparent text-slate-400 border-slate-800' : 'bg-white text-slate-500 border-slate-200')
-                }`}
-              >
-                {item.label}
-              </button>
-            );
-          })}
-        </nav>
       </div>
     </div>
   );

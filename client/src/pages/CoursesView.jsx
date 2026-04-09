@@ -150,6 +150,8 @@ export default function CoursesView({
                     )}
                   </div>
 
+
+
                   {/* Grid Layout Dropdown */}
                   <div className="relative hidden lg:block">
                     <button 
