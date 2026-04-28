@@ -234,11 +234,11 @@ export default function PlaylistView({ playlist, files, onBack, onReconnect, use
            <div className="w-[96%] max-w-[1600px] mx-auto py-8 flex flex-col lg:flex-row items-start justify-between gap-8">
               
               <div className="flex-1 w-full">
-                 <h1 className={`text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight mb-3 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{playlist.title}</h1>
-                 <p className={`text-sm sm:text-base font-medium max-w-2xl pl-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{playlist.description || "Master this subject by completing the lessons and tracking your goals."}</p>
+                 <h1 className={`text-[1.85rem] sm:text-3xl md:text-4xl font-bold tracking-tight mb-2 sm:mb-3 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{playlist.title}</h1>
+                 <p className={`text-xs sm:text-base font-medium max-w-2xl pl-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{playlist.description || "Master this subject by completing the lessons and tracking your goals."}</p>
                  
                  {/* Progress Bar */}
-                 <div className="mt-3 max-w-xl">
+                 <div className="mt-2 sm:mt-3 max-w-xl">
                     <div className="flex justify-between items-center mb-2">
                        <span className={`text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Course Progress</span>
                        <span className="text-sm font-bold text-indigo-500">{progressPercent}%</span>
@@ -343,20 +343,20 @@ export default function PlaylistView({ playlist, files, onBack, onReconnect, use
                
                {/* THE UNIFIED LESSON CARD (Player + Dashboard) */}
                {currentFile && (
-                 <div className={`border p-6 md:p-8 rounded-3xl shadow-sm flex flex-col gap-6 transition-colors duration-300 ${isDarkMode ? 'bg-[#1E293B] border-white/10' : 'bg-white border-slate-200'}`}>
+                 <div className={`border p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl shadow-sm flex flex-col gap-4 sm:gap-6 transition-colors duration-300 ${isDarkMode ? 'bg-[#1E293B] border-white/10' : 'bg-white border-slate-200'}`}>
                     
                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 transition-colors">
                       <div className="flex-1 sm:pr-4">
                         <span className={`text-xs font-black uppercase tracking-widest mb-1 block ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Lesson {currentVideoIndex + 1}</span>
-                        <h2 className={`text-xl md:text-2xl font-bold leading-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{currentFile.name}</h2>
+                        <h2 className={`text-lg sm:text-xl md:text-2xl font-bold leading-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{currentFile.name}</h2>
                       </div>
                       
-                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0 w-full sm:w-auto">
+                      <div className="flex flex-row items-stretch sm:items-center gap-2 shrink-0 w-full sm:w-auto">
                         {/* Mark for Revision Button */}
                         <button 
                            onClick={() => handleToggleRevision(currentFile.name)}
                            title="Mark for Revision"
-                           className={`p-2.5 rounded-xl border transition-all flex items-center justify-center
+                           className={`flex-1 sm:flex-none p-2.5 rounded-xl border transition-all flex items-center justify-center
                              ${revisionList.includes(currentFile.name) 
                                ? (isDarkMode ? 'bg-amber-500/10 border-amber-500/30 text-amber-500 shadow-sm' : 'bg-amber-50 border-amber-200 text-amber-600 shadow-sm')
                                : (isDarkMode ? 'bg-transparent border-slate-700 text-slate-400 hover:text-amber-500 hover:border-amber-500/30' : 'bg-transparent border-slate-200 text-slate-400 hover:text-amber-500 hover:border-amber-300')}`}
@@ -366,7 +366,7 @@ export default function PlaylistView({ playlist, files, onBack, onReconnect, use
 
                         <button 
                           onClick={() => onToggleCompletion(playlist.id, currentFile.name)} 
-                          className={`w-full sm:w-auto px-6 py-2.5 rounded-xl font-semibold text-sm transition-all shadow-sm flex items-center justify-center gap-2
+                          className={`flex-1 sm:flex-none w-full sm:w-auto px-4 sm:px-6 py-2.5 rounded-xl font-semibold text-sm transition-all shadow-sm flex items-center justify-center gap-2
                             ${userData[currentFile.name]?.completed 
                                ? (isDarkMode ? 'bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500/20' : 'bg-green-50 text-green-700 border border-green-200 hover:bg-green-100')
                                : 'bg-indigo-500 text-white hover:bg-indigo-600'}`}
@@ -400,7 +400,7 @@ export default function PlaylistView({ playlist, files, onBack, onReconnect, use
                     </div>
 
                     {/* Secondary Actions */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                        <button onClick={() => setActiveTab('notes')} className={`flex items-center gap-3 p-4 rounded-xl border transition-all group ${isDarkMode ? 'bg-[#0F172A] border-white/5 hover:border-slate-500' : 'bg-slate-50 border-slate-200 hover:border-slate-300'}`}>
                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isDarkMode ? 'bg-slate-800' : 'bg-white shadow-sm'}`}><StickyNote className="w-4 h-4 text-indigo-500" /></div>
                          <div className="text-left">
@@ -434,7 +434,7 @@ export default function PlaylistView({ playlist, files, onBack, onReconnect, use
            </div>
 
            {/* RIGHT PANEL: DATABASE */}
-           <div className={`xl:col-span-2 border rounded-3xl p-4 sm:p-6 flex flex-col min-h-[520px] xl:h-[850px] shadow-sm relative overflow-hidden transition-colors duration-300 ${isDarkMode ? 'bg-[#1E293B] border-white/10' : 'bg-white border-slate-200'}`}>
+           <div className={`xl:col-span-2 border rounded-2xl sm:rounded-3xl p-3 sm:p-6 flex flex-col min-h-[520px] xl:h-[850px] shadow-sm relative overflow-hidden transition-colors duration-300 ${isDarkMode ? 'bg-[#1E293B] border-white/10' : 'bg-white border-slate-200'}`}>
                
                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 z-10">
                   <h3 className={`text-lg font-bold flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
@@ -480,14 +480,14 @@ export default function PlaylistView({ playlist, files, onBack, onReconnect, use
                {/* GRADIENT TIMELINE UI */}
                {activeTab === 'videos' && (
                  <div ref={timelineContainerRef} className="flex-1 overflow-y-auto no-scrollbar relative z-10">
-                    <div className="relative px-3 sm:px-6 -mx-1 sm:-mx-2 pt-4 pb-20">
+                    <div className="relative px-3 sm:px-6 -mx-1 sm:-mx-2 pt-4 pb-16 sm:pb-20">
                        
                        {/* Timeline Track Background */}
-                       <div className={`absolute left-[33px] top-6 bottom-0 w-2 rounded-full transition-colors ${isDarkMode ? 'bg-slate-800' : 'bg-slate-200'}`}></div>
+                       <div className={`absolute left-8 sm:left-12 top-6 bottom-0 w-2 -translate-x-1/2 rounded-full transition-colors ${isDarkMode ? 'bg-slate-800' : 'bg-slate-200'}`}></div>
                        
                        {/* Timeline Gradient Progress Line */}
                        <div 
-                         className={`absolute left-[33px] top-6 w-2 rounded-full transition-all duration-1000 bg-gradient-to-b from-indigo-500 via-purple-500 to-cyan-400 shadow-[0_0_15px_rgba(99,102,241,0.5)]`}
+                         className={`absolute left-8 sm:left-12 top-6 w-2 -translate-x-1/2 rounded-full transition-all duration-1000 bg-gradient-to-b from-indigo-500 via-purple-500 to-cyan-400 shadow-[0_0_15px_rgba(99,102,241,0.5)]`}
                          style={{ height: `${videos.length > 0 ? ((completedVideos) / videos.length) * 100 : 0}%` }}
                        ></div>
 
@@ -504,10 +504,10 @@ export default function PlaylistView({ playlist, files, onBack, onReconnect, use
                               key={idx} 
                               ref={isActive ? activeNodeRef : null}
                               onClick={() => !isLocked && setCurrentFile(file)}
-                              className={`relative mb-6 sm:mb-8 flex gap-3 sm:gap-6 group items-center ${isLocked ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
+                              className={`relative mb-4 sm:mb-8 flex gap-3 sm:gap-6 group items-center ${isLocked ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
                             >
                                {/* Timeline Node */}
-                               <div className={`relative z-10 w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-full border-4 flex items-center justify-center font-bold text-sm transition-all duration-300
+                               <div className={`relative z-10 w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-full border-[3px] sm:border-4 flex items-center justify-center font-bold text-xs sm:text-sm transition-all duration-300
                                   ${isActive ? 'bg-gradient-to-br from-indigo-500 to-cyan-400 border-none text-white scale-110 shadow-lg shadow-indigo-500/30' 
                                   : isCompleted ? (isDarkMode ? 'bg-slate-800 border-indigo-500 text-indigo-500' : 'bg-white border-indigo-500 text-indigo-600') 
                                   : isLocked ? (isDarkMode ? 'bg-[#0F172A] border-slate-700 text-slate-600' : 'bg-slate-50 border-slate-200 text-slate-400')
@@ -519,7 +519,7 @@ export default function PlaylistView({ playlist, files, onBack, onReconnect, use
                                </div>
 
                                {/* Timeline Card */}
-                               <div className={`flex-1 p-3 sm:p-4 rounded-2xl border transition-all duration-300
+                               <div className={`flex-1 p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border transition-all duration-300
                                    ${isActive ? (isDarkMode ? 'bg-indigo-500/10 border-indigo-500/30 scale-[1.02]' : 'bg-indigo-50 border-indigo-200 shadow-sm scale-[1.02]')
                                    : isCompleted ? (isDarkMode ? 'bg-[#0F172A] border-white/5' : 'bg-slate-50 border-slate-100')
                                    : isLocked ? (isDarkMode ? 'bg-[#0F172A]/50 border-slate-800/50' : 'bg-slate-50 border-slate-100')
@@ -528,7 +528,7 @@ export default function PlaylistView({ playlist, files, onBack, onReconnect, use
                                   <div className="flex justify-between items-center gap-3">
                                      <div className="flex-1">
                                         <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Lesson {idx + 1}</p>
-                                        <p className={`text-sm font-semibold line-clamp-2 ${isActive ? (isDarkMode ? 'text-indigo-400' : 'text-indigo-700') : isCompleted ? (isDarkMode ? 'text-slate-300' : 'text-slate-800') : (isDarkMode ? 'text-slate-400 group-hover:text-white' : 'text-slate-600 group-hover:text-slate-900')}`}>
+                                        <p className={`text-xs sm:text-sm font-semibold line-clamp-2 ${isActive ? (isDarkMode ? 'text-indigo-400' : 'text-indigo-700') : isCompleted ? (isDarkMode ? 'text-slate-300' : 'text-slate-800') : (isDarkMode ? 'text-slate-400 group-hover:text-white' : 'text-slate-600 group-hover:text-slate-900')}`}>
                                           {file.name}
                                         </p>
                                      </div>

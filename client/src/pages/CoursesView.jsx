@@ -61,8 +61,8 @@ export default function CoursesView({
 
   // --- LOGIC: DYNAMIC GRID COLUMNS ---
   const getGridClass = () => {
-    if (gridCols === 4) return "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4";
-    if (gridCols === 5) return "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6";
+    if (gridCols === 4) return "grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4";
+    if (gridCols === 5) return "grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6";
     if (gridCols === 6) return "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7";
     return "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6";
   };
@@ -79,7 +79,7 @@ export default function CoursesView({
       />
 
       {/* 2. MAIN CONTENT AREA */}
-      <div className="flex-1 w-[96%] max-w-[1400px] mx-auto py-6 sm:py-8">
+      <div className="flex-1 w-[96%] max-w-[1400px] mx-auto py-4 sm:py-8">
         <div className="relative w-full flex flex-col pb-12 animate-in fade-in duration-700 min-h-[calc(100vh-80px)]">
         
           {/* FIXED BACKGROUND OVERLAY */}
@@ -91,42 +91,42 @@ export default function CoursesView({
              <div className={`absolute inset-0 ${isDarkMode ? 'bg-gradient-to-b from-[#0B1121]/80 via-[#0B1121]/90 to-[#0B1121]' : 'bg-gradient-to-b from-slate-50/80 via-slate-50/90 to-slate-50'}`} />
           </div>
           
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <div className="flex flex-col gap-3 sm:gap-5 lg:flex-row lg:items-start lg:justify-between">
             {/* PAGE TITLE */}
             <div className="z-30 max-w-xl">
-               <h1 className={`text-2xl sm:text-3xl font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>My Library</h1>
-               <p className={`text-sm font-medium mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Manage and access all your local courses.</p>
+               <h1 className={`text-[1.9rem] sm:text-3xl font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>My Library</h1>
+               <p className={`text-xs sm:text-sm font-medium mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Manage and access all your local courses.</p>
             </div>
 
             {/* PREMIUM TOOLBAR */}
-            <div className={`relative z-30 p-3 w-full lg:w-[70%] rounded-2xl shadow-sm mb-3 lg:mb-8 flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between transition-colors border backdrop-blur-xl
+            <div className={`relative z-30 p-2.5 sm:p-3 w-full lg:w-[70%] rounded-2xl shadow-sm mb-2 sm:mb-3 lg:mb-8 flex flex-row gap-2 sm:gap-4 items-center justify-between transition-colors border backdrop-blur-xl
               ${isDarkMode ? 'bg-slate-800/70 border-white/10' : 'bg-white/70 border-slate-200'}`}
               >
                
                {/* Search Input */}
-               <div className="relative w-[40%] md:max-w-sm group">
+               <div className="relative w-2/3 md:max-w-sm group">
                   <Search className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${isDarkMode ? 'text-slate-500 group-focus-within:text-indigo-400' : 'text-slate-400 group-focus-within:text-indigo-500'}`} />
                   <input 
                     type="text" 
                     placeholder="Search courses..." 
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className={`w-full pl-10 pr-4 py-2.5 rounded-xl text-sm font-medium outline-none transition-all duration-200 ease-out focus:ring-2 focus:ring-indigo-500/30 border
+                    className={`w-full pl-10 pr-3 py-2 rounded-xl text-xs sm:text-sm font-medium outline-none transition-all duration-200 ease-out focus:ring-2 focus:ring-indigo-500/30 border
                       ${isDarkMode ? 'bg-slate-900 border-slate-700 text-white placeholder:text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400'}`}
                   />
                </div>
 
                {/* Controls */}
-               <div className="flex flex-wrap items-stretch sm:items-center gap-3 w-full md:w-auto">
+               <div className="flex items-stretch sm:items-center gap-2 w-1/3 md:w-auto">
                   
                   {/* Sort Dropdown */}
-                  <div className="relative flex-1 sm:flex-none">
+                  <div className="relative w-10 sm:w-auto shrink-0">
                     <button 
                       onClick={() => { setShowSortMenu(!showSortMenu); setShowGridMenu(false); }}
-                      className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ease-out hover:brightness-110 border
+                      className={`w-10 sm:w-full flex items-center justify-center gap-2 px-0 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 ease-out hover:brightness-110 border
                         ${isDarkMode ? 'bg-slate-900 text-slate-300 border-slate-700 hover:border-slate-500' : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300'}`}
                     >
-                      <SortDesc className="w-4 h-4" /> Sort
+                      <SortDesc className="w-4 h-4" /> <span className="hidden sm:inline">Sort</span>
                     </button>
                     {showSortMenu && (
                       <>
@@ -186,9 +186,9 @@ export default function CoursesView({
                   {/* Add Course Button */}
                   <button 
                     onClick={onAdd}
-                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-lg transition-transform duration-200 hover:scale-105 whitespace-nowrap"
+                    className="flex-1 sm:flex-none min-w-0 flex items-center justify-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white px-2.5 sm:px-6 py-2 rounded-xl font-bold text-xs sm:text-sm shadow-lg transition-transform duration-200 hover:scale-105 whitespace-nowrap"
                   >
-                    <Plus className="w-4 h-4" /> Add Course
+                    <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Add Course</span>
                   </button>
 
                </div>
@@ -197,7 +197,7 @@ export default function CoursesView({
 
           {/* 3. GRID SYSTEM */}
           {isLoading && filteredAndSortedPlaylists.length === 0 ? (
-            <div className={`grid ${getGridClass()} gap-5 pb-20`}>
+            <div className={`grid ${getGridClass()} gap-3 sm:gap-5 pb-16 sm:pb-20`}>
               {Array.from({ length: 8 }).map((_, index) => (
                 <div
                   key={index}
@@ -231,7 +231,7 @@ export default function CoursesView({
               )}
             </div>
           ) : (
-            <div className={`grid ${getGridClass()} gap-5 pb-20`}>
+            <div className={`mt-2 sm:mt-4 grid ${getGridClass()} gap-5 pb-20`}>
              {filteredAndSortedPlaylists.map(playlist => (
                 <CourseCard 
                   key={playlist.id} 

@@ -11,7 +11,7 @@ export function CourseCard({ playlist, onClick, onDelete, onEdit, isDarkMode, us
   return (
     <div 
       onClick={onClick}
-      className={`group flex flex-col h-full rounded-2xl overflow-hidden border transition-all duration-200 ease-out hover:scale-[1.02] hover:shadow-xl relative cursor-pointer
+      className={`group flex flex-col h-full rounded-xl sm:rounded-2xl overflow-hidden border transition-all duration-200 ease-out hover:scale-[1.02] hover:shadow-xl relative cursor-pointer
         ${isDarkMode 
           ? 'bg-[#1E293B] border-white/10 hover:border-slate-500 hover:shadow-black/40' 
           : 'bg-white border-slate-200 hover:border-slate-400 hover:shadow-black/5'}`}
@@ -57,15 +57,15 @@ export function CourseCard({ playlist, onClick, onDelete, onEdit, isDarkMode, us
       </div>
 
       {/* Card Content */}
-      <div className="p-5 flex-1 flex flex-col">
-        <h3 className={`text-base font-semibold line-clamp-1 mb-1 transition-colors duration-200 ${isDarkMode ? 'text-slate-100 group-hover:text-indigo-400' : 'text-slate-900 group-hover:text-indigo-600'}`}>
+      <div className="p-3 sm:p-5 flex-1 flex flex-col">
+        <h3 className={`text-sm sm:text-base font-semibold line-clamp-1 mb-1 transition-colors duration-200 ${isDarkMode ? 'text-slate-100 group-hover:text-indigo-400' : 'text-slate-900 group-hover:text-indigo-600'}`}>
           {playlist.title}
         </h3>
        
         {/* Progress & Meta Area */}
         <div className="mt-auto">
            <div className="flex items-center justify-between mb-2">
-              <div className={`flex items-center gap-3 text-[10px] font-semibold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+              <div className={`flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
                  <span className="flex items-center gap-1"><Video className="w-3 h-3" /> {playlist.videoCount}</span>
                  <span className="flex items-center gap-1"><FileText className="w-3 h-3" /> {playlist.noteCount}</span>
               </div>
