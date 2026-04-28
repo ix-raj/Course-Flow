@@ -315,7 +315,7 @@ export default function LocalVideoPlayer({
                 </div>
 
                 <div className="flex items-center justify-between">
-                   <div className="flex items-center gap-4">
+                   <div className="flex items-center gap-3 sm:gap-4">
                       
                       {/* NEW: Previous Button */}
                       <button 
@@ -323,11 +323,11 @@ export default function LocalVideoPlayer({
                          disabled={!hasPrevious}
                          className={`transition-colors ${hasPrevious ? 'text-white hover:text-indigo-400' : 'text-white/30 cursor-not-allowed'}`}
                       >
-                         <SkipBack className="w-5 h-5 fill-current" />
+                         <SkipBack className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
                       </button>
 
                       <button onClick={handlePlayPause} className="text-white hover:text-indigo-400 transition-colors">
-                         {isPlaying ? <Pause className="w-6 h-6 fill-current" /> : <Play className="w-6 h-6 fill-current" />}
+                         {isPlaying ? <Pause className="w-5 h-5 sm:w-6 sm:h-6 fill-current" /> : <Play className="w-5 h-5 sm:w-6 sm:h-6 fill-current" />}
                       </button>
 
                       {/* NEW: Next Button */}
@@ -336,22 +336,22 @@ export default function LocalVideoPlayer({
                          disabled={!hasNext}
                          className={`transition-colors ${hasNext ? 'text-white hover:text-indigo-400' : 'text-white/30 cursor-not-allowed'}`}
                       >
-                         <SkipForward className="w-5 h-5 fill-current" />
+                         <SkipForward className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
                       </button>
 
                       {/* Volume */}
-                      <div className="flex items-center gap-3 group/volume ml-2">
-                         <button onClick={toggleMute} className="text-white hover:text-indigo-400">{isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}</button>
+                      <div className="flex items-center gap-2 sm:gap-3 group/volume ml-1.5 sm:ml-2">
+                         <button onClick={toggleMute} className="text-white hover:text-indigo-400">{isMuted ? <VolumeX className="w-4 h-4 sm:w-5 sm:h-5" /> : <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />}</button>
                          <input type="range" min="0" max="1" step="0.1" value={isMuted ? 0 : volume} onChange={handleVolumeChange} className="w-0 overflow-hidden group-hover/volume:w-24 transition-all duration-300 h-1 bg-white/30 rounded-lg appearance-none cursor-pointer accent-indigo-500" />
                       </div>
                       
                       <div className="text-xs font-medium text-slate-300 font-mono tracking-wide ml-2"><span className="text-white">{formatDuration(currentTime)}</span> / {formatDuration(duration)}</div>
                    </div>
 
-                   <div className="flex items-center gap-4">
+                   <div className="flex items-center gap-3 sm:gap-4">
                       <div className="relative">
-                         <button onClick={() => setShowSpeedMenu(!showSpeedMenu)} className="flex items-center gap-1.5 hover:bg-white/10 px-3 py-1.5 rounded-lg transition-colors group/speed">
-                            <Gauge className="w-4 h-4 text-slate-300 group-hover/speed:text-white" />
+                         <button onClick={() => setShowSpeedMenu(!showSpeedMenu)} className="flex items-center gap-1 sm:gap-1.5 hover:bg-white/10 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg transition-colors group/speed">
+                            <Gauge className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-300 group-hover/speed:text-white" />
                             <span className="text-xs font-bold text-white w-8 text-center">{playbackSpeed}x</span>
                          </button>
                          {showSpeedMenu && (
@@ -362,8 +362,8 @@ export default function LocalVideoPlayer({
                            </div>
                          )}
                       </div>
-                      <button onClick={togglePiP} className="text-white hover:text-indigo-400"><PictureInPicture2 className="w-5 h-5" /></button>
-                      <button onClick={toggleFullscreen} className="text-white hover:text-indigo-400">{isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}</button>
+                      <button onClick={togglePiP} className="text-white hover:text-indigo-400"><PictureInPicture2 className="w-4 h-4 sm:w-5 sm:h-5" /></button>
+                      <button onClick={toggleFullscreen} className="text-white hover:text-indigo-400">{isFullscreen ? <Minimize className="w-4 h-4 sm:w-5 sm:h-5" /> : <Maximize className="w-4 h-4 sm:w-5 sm:h-5" />}</button>
                    </div>
                 </div>
              </div>

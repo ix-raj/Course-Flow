@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 
 // --- HOOKS & UTILS ---
-import { getTodayDay, getTodayDateStr, formatFullDate, getFutureDateArray } from '../utils/dateUtils';
+import { getTodayDay, getTodayDateStr, getFutureDateArray } from '../utils/dateUtils';
 import { calculateCourseProgress } from '../utils/metrics';
 
 
@@ -48,7 +48,6 @@ export default function GoalsPage({ playlists, userData, initialProductivityData
   // --- CENTRALIZED DATE LOGIC ---
   const todayDay = getTodayDay();
   const todayDateStr = getTodayDateStr();
-  const formattedToday = formatFullDate(new Date());
   
   // Maintained your exact state structure (Array) to preserve your existing working logic
   const tenDaysStr = getFutureDateArray(10); 
@@ -244,7 +243,6 @@ export default function GoalsPage({ playlists, userData, initialProductivityData
                     userData={userData} // Passed correctly for metrics utility
                     navigate={navigate}
                     isDarkMode={isDarkMode}
-                    formattedToday={formattedToday}
                     todayDateStr={todayDateStr}
                     upcomingEvents={upcomingEvents}
                     onSync={onSync}
@@ -461,7 +459,6 @@ function DailyView({
   userData,
   navigate, 
   isDarkMode, 
-  formattedToday, 
   todayDateStr,
   upcomingEvents,
   onSync
@@ -469,6 +466,7 @@ function DailyView({
   const carouselRef = useRef(null);
   const [taskInputs, setTaskInputs] = useState({});
   const hasMultipleSubjects = (todaysData?.subjects?.length || 0) > 1;
+  const totalTasksToday = (todaysData?.subjects || []).reduce((acc, s) => acc + (s.tasks?.length || 0), 0);
 
   const openActionLink = useCallback((url) => {
     if (!url) return;
@@ -543,15 +541,12 @@ function DailyView({
       </div>
 
       {/* HERO SECTION */}
-      <div className="relative z-10 w-full px-4 sm:px-6 lg:px-12 mb-6 sm:mb-8 shrink-0 pt-2">
-         <p className={`text-sm font-bold tracking-widest uppercase mb-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
-            {formattedToday}
-         </p>
-         <h1 className={`text-3xl sm:text-4xl md:text-5xl font-black tracking-tight pl-1 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+      <div className="relative z-10 w-full px-4 sm:px-6 lg:px-12 mb-4 sm:mb-8 shrink-0 pt-1 sm:pt-2">
+         <h1 className={`text-[2rem] sm:text-4xl md:text-5xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
             Today's Goals
          </h1>
-         <p className={`text-base md:text-lg font-medium italic max-w-3xl leading-relaxed pl-1 mt-1 ${isDarkMode ? 'text-blue-300/80' : 'text-blue-600/80'}`}>
-            "{todaysData?.focus || "Focus on consistency. Execution builds mastery."}"
+         <p className={`text-sm sm:text-base font-semibold mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+            {new Date(todayDateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} • {totalTasksToday} tasks
          </p>
       </div>
 
@@ -602,20 +597,20 @@ function DailyView({
                       : 'w-full max-w-[1020px]'
                   }`}
                 >
-                   <div className={`w-full max-w-[1020px] rounded-[1.75rem] p-3 sm:p-4 lg:p-5 border backdrop-blur-3xl shadow-lg transition-all h-full ${
+                   <div className={`w-full max-w-[1020px] rounded-[1.25rem] sm:rounded-[1.75rem] p-2.5 sm:p-4 lg:p-5 border backdrop-blur-3xl shadow-lg transition-all h-full ${
                      isDarkMode ? 'bg-[#07101f]/60 border-white/10 shadow-black/20' : 'bg-white/55 border-white/70 shadow-slate-300/40'
                    }`}>
-                   <div className="grid grid-cols-1 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5 h-full min-h-[300px]">
+                   <div className="grid grid-cols-1 xl:grid-cols-5 gap-2.5 sm:gap-4 lg:gap-5 h-full min-h-[300px]">
                       
                       {/* LEFT: TO-DO CARD */}
-                      <div className={`xl:col-span-3 rounded-[1.25rem] sm:rounded-[1.5rem] p-4 sm:p-5 lg:p-6 border backdrop-blur-3xl flex flex-col transition-all relative overflow-hidden
+                      <div className={`xl:col-span-3 rounded-[1rem] sm:rounded-[1.5rem] p-3 sm:p-5 lg:p-6 border backdrop-blur-3xl flex flex-col transition-all relative overflow-hidden
                          ${isDarkMode ? 'bg-[#0f172a]/30 border-white/10 shadow-lg shadow-black/20' : 'bg-white/40 border-white/60 shadow-md'}`}
                       >
                          <div className="absolute top-0 right-0 max-w-[70%] px-3 sm:px-5 py-2 bg-[#1e1b4b]/60 backdrop-blur-md rounded-bl-3xl rounded-tr-[1.25rem] sm:rounded-tr-[1.5rem]">
                             <span className="block truncate text-xs sm:text-sm font-black tracking-widest text-[#84c8fc] drop-shadow-md">{sub.name}</span>
                          </div>
 
-                         <div className="flex items-center gap-4 mb-4 relative z-10 ">
+                         <div className="flex items-center gap-4 mb-3 relative z-10 ">
                            <h3 className={`text-base font-black uppercase tracking-widest ${isDarkMode ? 'text-white' : 'text-slate-900/60'}`}>To Do List</h3>
                          </div>
                          
@@ -633,7 +628,7 @@ function DailyView({
                                       <button className={`transition-colors ${isDone ? 'text-[#38bdf8]' : (isDarkMode ? 'text-slate-500 group-hover:text-[#38bdf8]' : 'text-slate-400 group-hover:text-blue-500')}`}>
                                          {isDone ? <CheckSquare className="w-5 h-5" /> : <Square className="w-5 h-5" />}
                                       </button>
-                                      <span className={`text-xs sm:text-sm font-medium transition-all break-words ${isDone ? (isDarkMode ? 'text-slate-400 line-through opacity-60' : 'text-slate-500 line-through opacity-60') : (isDarkMode ? 'text-slate-200' : 'text-slate-800')}`}>
+                                      <span className={`text-xs sm:text-sm font-medium transition-all break-words line-clamp-1 ${isDone ? (isDarkMode ? 'text-slate-400 line-through opacity-60' : 'text-slate-500 line-through opacity-60') : (isDarkMode ? 'text-slate-200' : 'text-slate-800')}`}>
                                          {task.text}
                                          {task.time && <span className={`ml-2 text-xs opacity-60 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>(Today {task.time})</span>}
                                       </span>
@@ -644,22 +639,24 @@ function DailyView({
                          </div>
 
                         {/* Direct Inline Add Task with Time Picker */}
-                        <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 relative z-10 border-t border-white/10 pt-4">
+                        <div className="mt-3 flex items-stretch gap-2.5 relative z-10 border-t border-white/10 pt-3">
                           <input 
                             value={taskInputs[sub.id]?.text || ''}
                             onChange={e => setTaskInputs({...taskInputs, [sub.id]: { ...taskInputs[sub.id], text: e.target.value }})}
                             onKeyDown={e => e.key === 'Enter' && handleAddDailyTask(sub.id)}
-                            placeholder="Add a new task for today..."
+                            placeholder="Add task..."
                             className={`flex-1 px-4 py-2.5 rounded-xl border text-sm font-semibold outline-none focus:border-[#38bdf8] transition-all shadow-inner ${isDarkMode ? 'bg-white/5 border-white/10 text-white placeholder:text-slate-500' : 'bg-white/60 border-slate-300 text-slate-900 placeholder:text-slate-400'}`}
                           />
                           
+                          <div className="hidden sm:block">
                           <CustomTimePicker 
                             value={taskInputs[sub.id]?.time || ''}
                             onChange={(newTime) => setTaskInputs({...taskInputs, [sub.id]: { ...taskInputs[sub.id], time: newTime }})}
                             isDarkMode={isDarkMode}
                           />
+                          </div>
 
-                          <button onClick={() => handleAddDailyTask(sub.id)} className="w-full sm:w-auto px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 font-bold text-xs bg-[#5ebbea] hover:bg-[#2dd4bf] text-slate-900 shadow-md transition-colors shrink-0">
+                          <button onClick={() => handleAddDailyTask(sub.id)} className="w-auto px-4 py-2.5 rounded-xl flex items-center justify-center gap-2 font-bold text-xs bg-[#5ebbea] hover:bg-[#2dd4bf] text-slate-900 shadow-md transition-colors shrink-0">
                             <Plus className="w-3.5 h-3.5" /> Add
                           </button>
                         </div>
@@ -669,16 +666,16 @@ function DailyView({
                       <div className="xl:col-span-2 flex flex-col gap-3 sm:gap-5">
                          
                          {/* 1. FEATURED COURSE CARD */}
-                         <div className={`flex-1 rounded-[1.25rem] sm:rounded-[1.5rem] p-3 sm:p-4 border backdrop-blur-3xl flex flex-col justify-center transition-all
+                         <div className={`flex-1 rounded-[1rem] sm:rounded-[1.5rem] p-3 sm:p-4 border backdrop-blur-3xl flex flex-col justify-center transition-all
                             ${isDarkMode ? 'bg-[#0f172a]/30 border-white/10 shadow-lg shadow-black/20' : 'bg-white/40 border-white/60 shadow-md'}`}
                          >
                             <div className="flex justify-between items-start ">
                                <h3 className={`text-base sm:text-lg font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Featured Course</h3>
-                               <CircularProgress progress={progress} />
+                               <div className="hidden sm:block"><CircularProgress progress={progress} /></div>
                             </div>
                             
                             {course ? (
-                               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 ">
+                               <div className="flex flex-row items-center justify-between gap-3 sm:gap-4 ">
                                   <div className="w-full sm:w-36 h-24 rounded-xl bg-slate-800 overflow-hidden relative shadow-sm shrink-0 border border-white/5">
                                      {course.cover ? (
                                         <img src={course.cover} className="w-full h-full object-cover" alt="cover" />
@@ -689,10 +686,10 @@ function DailyView({
                                   
                                   <div className="flex-1 w-full flex flex-col justify-center overflow-hidden pr-0 sm:pr-2">
                                      <h4 className={`text-sm font-bold truncate mb-0.5 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{course.title}</h4>
-                                     <p className={`text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{course.videoCount || 0} modules</p>
+                                     <p className={`text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{course.videoCount || 0} modules • {progress}%</p>
                                   </div>
                                   
-                                  <button onClick={() => navigate(`/course/${course.id}`)} className="w-full sm:w-auto shrink-0 px-4 py-2.5 bg-[#7dd3fc] hover:bg-[#38bdf8] text-slate-900 rounded-full text-xs font-bold shadow-sm transition-colors flex items-center justify-center">
+                                  <button onClick={() => navigate(`/course/${course.id}`)} className="w-auto shrink-0 px-3 sm:px-4 py-2 bg-[#7dd3fc] hover:bg-[#38bdf8] text-slate-900 rounded-full text-xs font-bold shadow-sm transition-colors flex items-center justify-center">
                                      Continue Course
                                   </button>
                                </div>
@@ -705,13 +702,13 @@ function DailyView({
                          </div>
 
                          {/* 2. QUICK ACTIONS CARD */}
-                         <div className={`rounded-[1.25rem] sm:rounded-[1.5rem] p-4 sm:p-5 lg:p-6 border backdrop-blur-3xl transition-all ${isDarkMode ? 'bg-[#0f172a]/30 border-white/10 shadow-lg shadow-black/20' : 'bg-white/40 border-white/60 shadow-md'}`}  >
+                         <div className={`rounded-[1rem] sm:rounded-[1.5rem] p-3 sm:p-5 lg:p-6 border backdrop-blur-3xl transition-all ${isDarkMode ? 'bg-[#0f172a]/30 border-white/10 shadow-lg shadow-black/20' : 'bg-white/40 border-white/60 shadow-md'}`}  >
                             <h3 className={`text-sm font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Quick Actions</h3>
-                            <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                            <div className="flex sm:grid sm:grid-cols-2 gap-2 sm:gap-3 overflow-x-auto no-scrollbar pb-1">
                                <button
                                  onClick={() => openActionLink(sub.actionUrls?.notes?.url)}
                                  disabled={!sub.actionUrls?.notes?.url}
-                                 className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 rounded-full border transition-all min-w-0 ${
+                                 className={`shrink-0 min-w-[128px] flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 rounded-full border transition-all ${
                                    sub.actionUrls?.notes?.url ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'
                                  }
                                  ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-white/50 border-slate-200 hover:bg-white text-slate-700 shadow-sm'}`}>
@@ -722,7 +719,7 @@ function DailyView({
                                <button
                                  onClick={() => openActionLink(sub.actionUrls?.doubts?.url)}
                                  disabled={!sub.actionUrls?.doubts?.url}
-                                 className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 rounded-full border transition-all min-w-0 ${
+                                 className={`shrink-0 min-w-[128px] flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 rounded-full border transition-all ${
                                    sub.actionUrls?.doubts?.url ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'
                                  }
                                  ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-white/50 border-slate-200 hover:bg-white text-slate-700 shadow-sm'}`}>
@@ -733,7 +730,7 @@ function DailyView({
                                <button
                                  onClick={() => openActionLink(sub.actionUrls?.goals?.url)}
                                  disabled={!sub.actionUrls?.goals?.url}
-                                 className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 rounded-full border transition-all min-w-0 ${
+                                 className={`shrink-0 min-w-[128px] flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 rounded-full border transition-all ${
                                    sub.actionUrls?.goals?.url ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'
                                  }
                                  ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-white/50 border-slate-200 hover:bg-white text-slate-700 shadow-sm'}`}>
@@ -744,7 +741,7 @@ function DailyView({
                                <button
                                  onClick={() => openActionLink(sub.actionUrls?.calendar?.url)}
                                  disabled={!sub.actionUrls?.calendar?.url}
-                                 className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 rounded-full border transition-all min-w-0 ${
+                                 className={`shrink-0 min-w-[128px] flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 rounded-full border transition-all ${
                                    sub.actionUrls?.calendar?.url ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'
                                  }
                                  ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-white/50 border-slate-200 hover:bg-white text-slate-700 shadow-sm'}`}>
@@ -947,10 +944,10 @@ function WeeklyConfig({ plan, setPlan, playlists, isDarkMode, todayDay, onSync }
          <div className={`absolute inset-0 ${isDarkMode ? 'bg-gradient-to-b from-[#0B1121]/80 via-[#0B1121]/90 to-[#0B1121]' : 'bg-gradient-to-b from-slate-50/80 via-slate-50/90 to-slate-50'}`} />
       </div>
 
-      <div className="relative z-10 w-full max-w-[1600px] mx-auto flex flex-col px-4 sm:px-6 lg:px-12 pt-6 sm:pt-8 pb-12 h-full">
+      <div className="relative z-10 w-full max-w-[1600px] mx-auto flex flex-col px-4 sm:px-6 lg:px-12 pt-4 sm:pt-8 pb-10 sm:pb-12 h-full">
          
-         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6 mb-7 sm:mb-9">
-               <h3 className={`text-3xl sm:text-4xl md:text-5xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6 mb-4 sm:mb-9">
+               <h3 className={`text-[2rem] sm:text-4xl md:text-5xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                   Configure <span className="text-blue-500">{selectedDay}</span>
                </h3>
                <div className="flex flex-col w-full sm:max-w-xl">
@@ -958,26 +955,26 @@ function WeeklyConfig({ plan, setPlan, playlists, isDarkMode, todayDay, onSync }
                   <input 
                      type="text" value={dayData.focus} onChange={e => updateFocus(e.target.value)} 
                      placeholder="Day's Focus Theme- WebDev "
-                     className={`w-full px-5 py-3.5 rounded-xl border text-sm font-bold outline-none focus:border-blue-500 transition-all shadow-lg backdrop-blur-2xl ${isDarkMode ? 'bg-[#0f172a]/40 border-white/10 text-white placeholder:text-slate-500 shadow-black/20' : 'bg-white/60 border-slate-300 text-slate-900 placeholder:text-slate-400 shadow-slate-200/50'}`}
+                     className={`w-full px-4 py-2.5 sm:px-5 sm:py-3.5 rounded-xl border text-sm font-bold outline-none focus:border-blue-500 transition-all shadow-lg backdrop-blur-2xl ${isDarkMode ? 'bg-[#0f172a]/40 border-white/10 text-white placeholder:text-slate-500 shadow-black/20' : 'bg-white/60 border-slate-300 text-slate-900 placeholder:text-slate-400 shadow-slate-200/50'}`}
                   />
                </div>
             </div>
 
          <div className="flex flex-col lg:flex-row gap-5 sm:gap-8 items-start w-full">
 
-         <div className={`w-full lg:w-1/4 shrink-0 flex flex-col gap-3 rounded-[1.5rem] sm:rounded-[2rem] p-4 sm:p-6 border backdrop-blur-3xl shadow-lg shadow-black/20 ${isDarkMode ? 'bg-[#0f172a]/30 border-white/10' : 'bg-white/40 border-white/60'}`}>
-            <h2 className={`text-2xl font-black mb-6 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Weekly Plan</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-1 gap-2">
+         <div className={`w-full lg:w-1/4 shrink-0 flex flex-col gap-2 rounded-[1.2rem] sm:rounded-[2rem] p-3 sm:p-6 border backdrop-blur-3xl shadow-lg shadow-black/20 ${isDarkMode ? 'bg-[#0f172a]/30 border-white/10' : 'bg-white/40 border-white/60'}`}>
+            <h2 className={`text-lg sm:text-2xl font-black mb-2 sm:mb-6 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Weekly Plan</h2>
+            <div className="flex lg:grid lg:grid-cols-1 gap-2 overflow-x-auto no-scrollbar">
                {days.map(day => (
                  <button 
                    key={day} onClick={() => setSelectedDay(day)}
-                   className={`p-3 sm:p-4 rounded-2xl border text-left transition-all duration-200 ${
+                   className={`shrink-0 min-w-[86px] lg:min-w-0 p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border text-center lg:text-left transition-all duration-200 ${
                      selectedDay === day 
                        ? (isDarkMode ? 'bg-blue-500/20 border-blue-500/50 shadow-md shadow-blue-500/10' : 'bg-blue-50 border-blue-300 shadow-sm') 
                        : (isDarkMode ? 'bg-transparent border-transparent hover:bg-white/5' : 'bg-transparent border-transparent hover:bg-white/50')
                    }`}
                  >
-                   <div className="flex justify-between items-center">
+                   <div className="flex flex-col lg:flex-row justify-between items-center gap-0.5 lg:gap-0">
                      <span className={`font-bold ${selectedDay === day ? 'text-blue-400' : (isDarkMode ? 'text-slate-300' : 'text-slate-700')}`}>{day}</span>
                      <span className={`text-xs font-black ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>{(plan[day]?.subjects || []).length} Subs</span>
                    </div>
@@ -986,7 +983,7 @@ function WeeklyConfig({ plan, setPlan, playlists, isDarkMode, todayDay, onSync }
             </div>
          </div>
 
-         <div className="w-full lg:w-3/4 flex flex-col gap-6 sm:gap-10 overflow-y-visible pb-10 px-1 sm:px-2">
+         <div className="w-full lg:w-3/4 flex flex-col gap-4 sm:gap-10 overflow-y-visible pb-8 sm:pb-10 px-0 sm:px-2">
 
             {(dayData.subjects || []).map(sub => {
                const course = playlists.find(p => p.id === sub.courses?.[0]);
@@ -1037,7 +1034,7 @@ function WeeklyConfig({ plan, setPlan, playlists, isDarkMode, todayDay, onSync }
                         </button>
                       </div>
 
-                     <div className={`rounded-[1.75rem] p-3 sm:p-4 lg:p-5 border backdrop-blur-3xl shadow-lg transition-all h-full ${
+                     <div className={`rounded-[1.2rem] sm:rounded-[1.75rem] p-2.5 sm:p-4 lg:p-5 border backdrop-blur-3xl shadow-lg transition-all h-full ${
                        isDarkMode ? 'bg-[#07101f]/60 border-white/10 shadow-black/20' : 'bg-white/55 border-white/70 shadow-slate-300/40'
                      }`}>
                      <div className="grid grid-cols-1 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5 h-full min-h-[300px]">
@@ -1054,7 +1051,7 @@ function WeeklyConfig({ plan, setPlan, playlists, isDarkMode, todayDay, onSync }
                               />
                            </div>
 
-                           <div className="flex items-center gap-4 mb-4 relative z-10 pt-2 border-b border-white/10 pb-4">
+                           <div className="flex items-center gap-4 mb-3 relative z-10 pt-2 border-b border-white/10 pb-3">
                              <h3 className={`text-base font-black uppercase tracking-widest ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>To Do List</h3>
                            </div>
                            
@@ -1064,29 +1061,31 @@ function WeeklyConfig({ plan, setPlan, playlists, isDarkMode, todayDay, onSync }
                                  <div key={task.id} className={`flex items-start justify-between gap-3 px-3 sm:px-4 py-2.5 rounded-xl transition-all border ${isDarkMode ? 'bg-white/5 border-white/5' : 'bg-white/50 border-slate-200 shadow-sm'}`}>
                                     <div className="flex items-start gap-3 min-w-0">
                                       <Square className={`w-4 h-4 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`} />
-                                      <span className={`text-xs sm:text-sm font-medium break-words ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>{task.text}</span>
+                                      <span className={`text-xs sm:text-sm font-medium break-words line-clamp-1 ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>{task.text}</span>
                                     </div>
                                     <button onClick={() => deleteTask(sub.id, task.id)} className="text-slate-500 hover:text-red-500 transition-colors p-1.5"><X className="w-4 h-4" /></button>
                                  </div>
                               ))}
                            </div>
 
-                          <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 relative z-10 border-t border-white/10 pt-4">
+                          <div className="mt-3 flex items-stretch gap-2.5 relative z-10 border-t border-white/10 pt-3">
                             <input 
                               value={taskInputs[sub.id]?.text || ''}
                               onChange={e => setTaskInputs({...taskInputs, [sub.id]: { ...taskInputs[sub.id], text: e.target.value }})}
                               onKeyDown={e => e.key === 'Enter' && handleAddTask(sub.id)}
-                              placeholder="Type a task and press Enter..."
+                              placeholder="Add task..."
                               className={`flex-1 px-4 py-2.5 rounded-xl border text-sm font-semibold outline-none focus:border-[#38bdf8] transition-all shadow-inner ${isDarkMode ? 'bg-white/5 border-white/10 text-white placeholder:text-slate-500' : 'bg-white/60 border-slate-300 text-slate-900 placeholder:text-slate-400'}`}
                             />
                             
+                            <div className="hidden sm:block">
                             <CustomTimePicker 
                               value={taskInputs[sub.id]?.time || ''}
                               onChange={(newTime) => setTaskInputs({...taskInputs, [sub.id]: { ...taskInputs[sub.id], time: newTime }})}
                               isDarkMode={isDarkMode}
                             />
+                            </div>
 
-                            <button onClick={() => handleAddTask(sub.id)} className="w-full sm:w-auto px-4 py-2.5 rounded-xl flex items-center justify-center gap-2 font-bold text-sm bg-[#5eead4] hover:bg-[#2dd4bf] text-slate-900 shadow-md transition-colors shrink-0">
+                            <button onClick={() => handleAddTask(sub.id)} className="w-auto px-4 py-2.5 rounded-xl flex items-center justify-center gap-2 font-bold text-sm bg-[#5eead4] hover:bg-[#2dd4bf] text-slate-900 shadow-md transition-colors shrink-0">
                               <Plus className="w-4 h-4" /> Add
                             </button>
                           </div>
@@ -1095,7 +1094,7 @@ function WeeklyConfig({ plan, setPlan, playlists, isDarkMode, todayDay, onSync }
                         <div className="xl:col-span-2 flex flex-col gap-3 sm:gap-5 relative">
                            
                            <div className={`flex-1 rounded-[1.25rem] sm:rounded-[1.5rem] p-4 sm:p-5 lg:p-6 border backdrop-blur-3xl flex flex-col shadow-lg shadow-black/20 transition-all relative ${openCourseSelect === sub.id ? 'z-50' : 'z-10'} ${isDarkMode ? 'bg-[#0f172a]/30 border-white/10' : 'bg-white/40 border-white/60'}`}>
-                              <h3 className={`text-sm font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Featured Course</h3>
+                              <h3 className={`text-sm font-bold mb-3 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Featured Course</h3>
                               
                               <div className="relative mb-4 z-20">
                                  <button 
@@ -1156,7 +1155,7 @@ function WeeklyConfig({ plan, setPlan, playlists, isDarkMode, todayDay, onSync }
                            <div className={`rounded-[1.25rem] sm:rounded-[1.5rem] p-4 sm:p-5 lg:p-6 border backdrop-blur-3xl shadow-lg shadow-black/20 transition-all relative z-10 ${isDarkMode ? 'bg-[#0f172a]/30 border-white/10' : 'bg-white/40 border-white/60'}`}>
                               <h3 className={`text-sm font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Action Links</h3>
                               
-                              <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-2 gap-3">
+                              <div className="grid grid-cols-4 sm:grid-cols-4 xl:grid-cols-2 gap-2 sm:gap-3">
                                  {linkTypes.map(lt => {
                                     const isActive = editingLink[sub.id] === lt.key;
                                     const hasData = sub.actionUrls?.[lt.key]?.url || sub.actionUrls?.[lt.key]?.label;
@@ -1164,7 +1163,7 @@ function WeeklyConfig({ plan, setPlan, playlists, isDarkMode, todayDay, onSync }
                                       <button 
                                         key={lt.key}
                                         onClick={() => setEditingLink({...editingLink, [sub.id]: isActive ? null : lt.key})}
-                                        className={`p-3 rounded-2xl border transition-all relative flex items-center justify-center
+                                        className={`p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border transition-all relative flex items-center justify-center
                                           ${isActive ? (isDarkMode ? 'bg-white/20 border-white/50 text-white shadow-lg' : 'bg-slate-200 border-slate-400 text-slate-900 shadow-md') : 
                                            hasData ? (isDarkMode ? 'bg-white/5 border-white/20 hover:bg-white/10 text-white' : 'bg-white/80 border-slate-300 hover:bg-white text-slate-800') : 
                                            (isDarkMode ? 'bg-transparent border-white/5 hover:bg-white/5 text-slate-500' : 'bg-transparent border-slate-200 hover:bg-slate-100 text-slate-400')}
@@ -1296,35 +1295,35 @@ function MonthlyConfig({ events, setEvents, todayDateStr, isDarkMode, onSync }) 
          <div className={`absolute inset-0 ${isDarkMode ? 'bg-gradient-to-b from-[#0B1121]/80 via-[#0B1121]/90 to-[#0B1121]' : 'bg-gradient-to-b from-slate-50/80 via-slate-50/90 to-slate-50'}`} />
       </div>
 
-      <div className="relative z-10 w-full max-w-[1600px] mx-auto flex flex-col lg:flex-row gap-8 px-6 lg:px-12 pt-8 pb-12 items-start h-full">
+      <div className="relative z-10 w-full max-w-[1600px] mx-auto flex flex-col lg:flex-row gap-4 sm:gap-8 px-3 sm:px-6 lg:px-12 pt-4 sm:pt-8 pb-10 sm:pb-12 items-start h-full">
          
-         <div className={`w-full lg:w-3/5 shrink-0 rounded-[1.5rem] p-6 lg:p-10 border backdrop-blur-3xl flex flex-col shadow-lg shadow-black/20 transition-all ${isDarkMode ? 'bg-[#0f172a]/30 border-white/10' : 'bg-white/40 border-white/60'}`}>
+         <div className={`w-full lg:w-3/5 shrink-0 rounded-[1.2rem] sm:rounded-[1.5rem] p-3.5 sm:p-6 lg:p-10 border backdrop-blur-3xl flex flex-col shadow-lg shadow-black/20 transition-all ${isDarkMode ? 'bg-[#0f172a]/30 border-white/10' : 'bg-white/40 border-white/60'}`}>
             
-            <div className="flex items-center justify-between mb-10">
+            <div className="flex items-center justify-between mb-4 sm:mb-10">
                <div>
-                  <h2 className={`text-4xl md:text-5xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                  <h2 className={`text-[2rem] sm:text-4xl md:text-5xl font-black tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                     {monthNames[currentMonth]} <span className="text-blue-400">{currentYear}</span>
                   </h2>
                </div>
-               <div className="flex gap-3">
-                  <button onClick={() => { if(currentMonth===0){setCurrentMonth(11);setCurrentYear(y=>y-1)}else setCurrentMonth(m=>m-1) }} className={`p-3 rounded-full border transition-all hover:scale-105 ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-white/50 border-slate-200 hover:bg-white text-slate-700 shadow-sm'}`}>
+               <div className="flex gap-2 sm:gap-3">
+                  <button onClick={() => { if(currentMonth===0){setCurrentMonth(11);setCurrentYear(y=>y-1)}else setCurrentMonth(m=>m-1) }} className={`p-2.5 sm:p-3 rounded-full border transition-all hover:scale-105 ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-white/50 border-slate-200 hover:bg-white text-slate-700 shadow-sm'}`}>
                      <ChevronLeft className="w-6 h-6" />
                   </button>
-                  <button onClick={() => { if(currentMonth===11){setCurrentMonth(0);setCurrentYear(y=>y+1)}else setCurrentMonth(m=>m+1) }} className={`p-3 rounded-full border transition-all hover:scale-105 ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-white/50 border-slate-200 hover:bg-white text-slate-700 shadow-sm'}`}>
+                  <button onClick={() => { if(currentMonth===11){setCurrentMonth(0);setCurrentYear(y=>y+1)}else setCurrentMonth(m=>m+1) }} className={`p-2.5 sm:p-3 rounded-full border transition-all hover:scale-105 ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-white/50 border-slate-200 hover:bg-white text-slate-700 shadow-sm'}`}>
                      <ChevronRight className="w-6 h-6" />
                   </button>
                </div>
             </div>
 
-            <div className="grid grid-cols-7 gap-2 mb-4">
+            <div className="grid grid-cols-7 gap-1.5 sm:gap-2 mb-2 sm:mb-4">
                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
-                 <div key={d} className={`text-center text-xs font-black uppercase tracking-widest pb-4 border-b ${isDarkMode ? 'text-slate-500 border-white/10' : 'text-slate-400 border-slate-200'}`}>
+                 <div key={d} className={`text-center text-[10px] sm:text-xs font-black uppercase tracking-widest pb-2.5 sm:pb-4 border-b ${isDarkMode ? 'text-slate-500 border-white/10' : 'text-slate-400 border-slate-200'}`}>
                     {d}
                  </div>
                ))}
             </div>
 
-            <div className="grid grid-cols-7 gap-2 md:gap-4 flex-1">
+            <div className="grid grid-cols-7 gap-1.5 sm:gap-2 md:gap-4 flex-1">
                {Array.from({ length: firstDayOfMonth }).map((_, i) => <div key={`empty-${i}`} className="p-2" />)}
                {Array.from({ length: daysInMonth }).map((_, i) => {
                   const d = i + 1;
@@ -1337,14 +1336,14 @@ function MonthlyConfig({ events, setEvents, todayDateStr, isDarkMode, onSync }) 
                      <button 
                         key={d} 
                         onClick={() => setSelectedDate(dateStr)}
-                        className={`relative aspect-square md:aspect-auto md:min-h-[71px] p-2 md:p-4 rounded-2xl flex flex-col items-center md:items-start justify-center md:justify-start transition-all border group
+                        className={`relative aspect-square md:aspect-auto md:min-h-[71px] p-1.5 sm:p-2 md:p-4 rounded-xl sm:rounded-2xl flex flex-col items-center md:items-start justify-center md:justify-start transition-all border group
                           ${isSelected 
                              ? (isDarkMode ? 'bg-blue-500/20 border-blue-500/50 shadow-[0_0_20px_rgba(16,185,129,0.15)]' : 'bg-blue-50 border-blue-400 shadow-sm') 
                              : (isDarkMode ? 'bg-white/5 border-transparent hover:bg-white/10 hover:border-white/10' : 'bg-white/40 border-transparent hover:bg-white hover:shadow-sm')}
                           ${isToday && !isSelected ? (isDarkMode ? 'ring-1 ring-blue-500/50' : 'ring-1 ring-blue-400') : ''}
                         `}
                      >
-                        <span className={`text-lg md:text-xl font-bold transition-colors 
+                        <span className={`text-sm sm:text-lg md:text-xl font-bold transition-colors 
                            ${isSelected ? 'text-blue-500' : isToday ? 'text-blue-500' : (isDarkMode ? 'text-slate-300 group-hover:text-white' : 'text-slate-700 group-hover:text-slate-900')}
                         `}>
                            {d}
@@ -1364,17 +1363,17 @@ function MonthlyConfig({ events, setEvents, todayDateStr, isDarkMode, onSync }) 
             </div>
          </div>
 
-         <div className="w-full lg:w-2/5 flex flex-col gap-6">
+         <div className="w-full lg:w-2/5 flex flex-col gap-4 sm:gap-6">
             
-            <div className={`rounded-[1.5rem] p-6 lg:p-8 border backdrop-blur-3xl shadow-lg shadow-black/20 transition-all ${isDarkMode ? 'bg-[#0f172a]/30 border-white/10' : 'bg-white/40 border-white/60'}`}>
-               <h3 className={`text-xl font-black mb-6 flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+            <div className={`rounded-[1.2rem] sm:rounded-[1.5rem] p-4 sm:p-6 lg:p-8 border backdrop-blur-3xl shadow-lg shadow-black/20 transition-all ${isDarkMode ? 'bg-[#0f172a]/30 border-white/10' : 'bg-white/40 border-white/60'}`}>
+               <h3 className={`text-lg sm:text-xl font-black mb-4 sm:mb-6 flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                  <Plus className="w-5 h-5 text-blue-400" /> Add Event
                </h3>
                
-               <div className="flex flex-col gap-4">
+               <div className="flex flex-col gap-3 sm:gap-4">
                   <div className="flex flex-col">
                      <label className={`text-[10px] font-black uppercase tracking-widest mb-1.5 pl-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Selected Date</label>
-                     <div className={`w-full px-4 py-3 rounded-xl border text-sm font-bold flex items-center gap-3 ${isDarkMode ? 'bg-white/5 border-white/10 text-blue-400' : 'bg-white/50 border-slate-200 text-blue-600'}`}>
+                     <div className={`w-full px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl border text-xs sm:text-sm font-bold flex items-center gap-2.5 sm:gap-3 ${isDarkMode ? 'bg-white/5 border-white/10 text-blue-400' : 'bg-white/50 border-slate-200 text-blue-600'}`}>
                         <CalendarIcon className="w-4 h-4" />
                         {new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric', year: 'numeric' })}
                      </div>
@@ -1388,7 +1387,7 @@ function MonthlyConfig({ events, setEvents, todayDateStr, isDarkMode, onSync }) 
                         onChange={e => setFormTitle(e.target.value)} 
                         onKeyDown={e => e.key === 'Enter' && handleAddEvent()}
                         placeholder="e.g. Final Exam, Team Meeting..." 
-                        className={`w-full px-4 py-3 rounded-xl border text-sm font-bold outline-none focus:border-blue-500 transition-all shadow-inner ${isDarkMode ? 'bg-[#0f172a]/40 border-white/10 text-white placeholder:text-slate-500' : 'bg-white/60 border-slate-300 text-slate-900 placeholder:text-slate-400'}`} 
+                        className={`w-full px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl border text-sm font-bold outline-none focus:border-blue-500 transition-all shadow-inner ${isDarkMode ? 'bg-[#0f172a]/40 border-white/10 text-white placeholder:text-slate-500' : 'bg-white/60 border-slate-300 text-slate-900 placeholder:text-slate-400'}`} 
                      />
                   </div>
 
@@ -1398,30 +1397,30 @@ function MonthlyConfig({ events, setEvents, todayDateStr, isDarkMode, onSync }) 
                         type="time" 
                         value={formTime} 
                         onChange={e => setFormTime(e.target.value)} 
-                        className={`w-full px-4 py-3 rounded-xl border text-sm font-bold outline-none focus:border-blue-500 transition-all shadow-inner ${isDarkMode ? 'bg-[#0f172a]/40 border-white/10 text-white' : 'bg-white/60 border-slate-300 text-slate-900'}`} 
+                        className={`w-full px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl border text-sm font-bold outline-none focus:border-blue-500 transition-all shadow-inner ${isDarkMode ? 'bg-[#0f172a]/40 border-white/10 text-white' : 'bg-white/60 border-slate-300 text-slate-900'}`} 
                      />
                   </div>
 
                   <button 
                      onClick={handleAddEvent} 
-                     className="mt-2 w-full py-3.5 rounded-xl bg-blue-500 hover:bg-blue-400 text-slate-900 font-black text-sm tracking-wide shadow-lg shadow-blue-500/20 transition-transform active:scale-95 flex items-center justify-center gap-2"
+                     className="mt-1.5 sm:mt-2 w-full py-3 rounded-xl bg-blue-500 hover:bg-blue-400 text-slate-900 font-black text-sm tracking-wide shadow-lg shadow-blue-500/20 transition-transform active:scale-95 flex items-center justify-center gap-2"
                   >
                      <Plus className="w-4 h-4" /> Save Event
                   </button>
                </div>
             </div>
 
-            <div className={`flex-1 rounded-[1.5rem] p-6 lg:p-8 border backdrop-blur-3xl shadow-lg shadow-black/20 transition-all flex flex-col ${isDarkMode ? 'bg-[#0f172a]/30 border-white/10' : 'bg-white/40 border-white/60'}`}>
-               <h3 className={`text-xl font-black mb-6 flex items-center justify-between ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+            <div className={`flex-1 rounded-[1.2rem] sm:rounded-[1.5rem] p-4 sm:p-6 lg:p-8 border backdrop-blur-3xl shadow-lg shadow-black/20 transition-all flex flex-col ${isDarkMode ? 'bg-[#0f172a]/30 border-white/10' : 'bg-white/40 border-white/60'}`}>
+               <h3 className={`text-lg sm:text-xl font-black mb-4 sm:mb-6 flex items-center justify-between ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                  <span className="flex items-center gap-2"><AlignLeft className="w-5 h-5 text-blue-400" /> Plans</span>
                  <span className={`text-xs font-bold px-3 py-1 rounded-full ${isDarkMode ? 'bg-white/10 text-slate-300' : 'bg-slate-200 text-slate-700'}`}>
                    {selectedDateEvents.length} Events
                  </span>
                </h3>
 
-               <div className="flex flex-col gap-3 flex-1 overflow-y-auto custom-scrollbar pr-2 max-h-[400px]">
+               <div className="flex flex-col gap-2.5 sm:gap-3 flex-1 overflow-y-auto custom-scrollbar pr-1 sm:pr-2 max-h-[330px] sm:max-h-[400px]">
                   {selectedDateEvents.length === 0 ? (
-                     <div className="flex flex-col items-center justify-center text-center py-10 opacity-50">
+                     <div className="flex flex-col items-center justify-center text-center py-6 sm:py-10 opacity-50">
                         <CalendarIcon className={`w-12 h-12 mb-3 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`} />
                         <p className={`text-sm font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Your schedule is clear.</p>
                         <p className={`text-xs ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>No events for this date.</p>
