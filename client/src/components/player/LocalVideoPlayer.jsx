@@ -34,6 +34,7 @@ export default function LocalVideoPlayer({
   const containerRef = useRef(null);
   const controlsTimeoutRef = useRef(null);
   const clickTimer = useRef(null);
+  const suppressSingleClickUntilRef = useRef(0);
 
   const inferMimeType = useCallback((inputFile) => {
     if (!inputFile?.name) return inputFile?.type || '';
@@ -114,12 +115,22 @@ export default function LocalVideoPlayer({
   }, [file, inferMimeType, subtitleFile]);
 
   const handleLoadedMetadata = () => {
-    if (videoRef.current && initialTime > 0 && !hasSetInitialTime) {
-      videoRef.current.currentTime = initialTime;
-      setCurrentTime(initialTime);
-      setHasSetInitialTime(true);
+    if (videoRef.current) {
+      videoRef.current.playbackRate = playbackSpeed;
+
+      if (initialTime > 0 && !hasSetInitialTime) {
+        videoRef.current.currentTime = initialTime;
+        setCurrentTime(initialTime);
+        setHasSetInitialTime(true);
+      }
     }
   };
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.playbackRate = playbackSpeed;
+    }
+  }, [playbackSpeed, videoUrl]);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -128,6 +139,13 @@ export default function LocalVideoPlayer({
     };
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (clickTimer.current) clearTimeout(clickTimer.current);
+      if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
+    };
   }, []);
 
   const handleMouseMove = () => {
@@ -221,12 +239,14 @@ export default function LocalVideoPlayer({
   };
 
   const handleSingleClick = () => {
+    if (Date.now() < suppressSingleClickUntilRef.current) return;
     if (clickTimer.current) return;
     clickTimer.current = setTimeout(() => { handlePlayPause(); clickTimer.current = null; }, 250); 
   };
 
   const handleDoubleClick = (e) => {
     if (clickTimer.current) { clearTimeout(clickTimer.current); clickTimer.current = null; }
+    suppressSingleClickUntilRef.current = Date.now() + 350;
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     if (x < rect.width * 0.35) { skipTime(-10); triggerSeekAnimation('backward'); } 
@@ -255,6 +275,7 @@ export default function LocalVideoPlayer({
   );
 
   const containerStyle = isFakeFullscreen ? { position: 'fixed', inset: 0, zIndex: 100 } : { position: 'relative' };
+  const shouldShowCenterControl = !seekOverlay && (!isPlaying || showControls);
 
   return (
     <div 
@@ -267,7 +288,7 @@ export default function LocalVideoPlayer({
       onMouseLeave={() => isPlaying && setShowControls(false)}
     >
       {isFakeFullscreen && (<button onClick={() => setIsFakeFullscreen(false)} className="absolute top-4 right-4 z- bg-black/60 hover:bg-black/90 text-white p-2 rounded-full backdrop-blur-md transition-colors"><Minimize className="h-6 w-6" /></button>)}
-      {showSpeedMenu && (<div className="absolute inset-0 z-40" onClick={() => setShowSpeedMenu(false)}></div>)}
+      {showSpeedMenu && (<div className="absolute inset-0 z-20" onClick={() => setShowSpeedMenu(false)}></div>)}
 
       <div className={`relative w-full flex flex-col ${(isFullscreen || isFakeFullscreen) ? 'h-full' : ''}`} style={{ maxHeight: (isFullscreen || isFakeFullscreen) ? '100vh' : '70vh' }}>
          <div className="relative w-full aspect-video bg-black flex-1 overflow-hidden group/video">
@@ -296,8 +317,8 @@ export default function LocalVideoPlayer({
                </div>
              )}
 
-             <div className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-all duration-300 ${!isPlaying ? 'opacity-100 scale-100' : 'opacity-0 scale-90 group-hover/video:opacity-100 group-hover/video:scale-100'}`}>
-                {!seekOverlay && (
+             <div className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-all duration-300 ${shouldShowCenterControl ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
+                {shouldShowCenterControl && (
                   <div className="p-6 rounded-full bg-black/40 backdrop-blur-md shadow-2xl hover:bg-black/60 transition-colors border border-white/10">
                      {isPlaying ? <Pause className="w-10 h-10 text-white fill-white" /> : <Play className="w-10 h-10 text-white fill-white ml-1" />}
                   </div>
@@ -305,7 +326,7 @@ export default function LocalVideoPlayer({
              </div>
 
              {/* Bottom Controls Bar */}
-             <div className={`absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/90 via-black/60 to-transparent p-6 pt-12 transition-all duration-300 ${showControls || !isPlaying ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+             <div className={`absolute bottom-0 left-0 z-40 w-full bg-gradient-to-t from-black/90 via-black/60 to-transparent p-6 pt-12 transition-all duration-300 ${showControls || !isPlaying ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
                 
                 {/* Progress Bar */}
                 <div className="relative w-full h-1.5 bg-white/20 rounded-full cursor-pointer mb-4 group/progress hover:h-2 transition-all">
