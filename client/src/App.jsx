@@ -38,8 +38,21 @@ function CourseRoute({
 }) {
   const { id } = useParams();
   const playlist = (playlists || []).find(p => p.id === id);
+
+  useEffect(() => {
+    if (playlist?.isExternal && playlist.externalUrl) {
+      window.location.replace(playlist.externalUrl);
+    }
+  }, [playlist]);
   
   if (!playlist) return <Navigate to="/library" />;
+  if (playlist.isExternal && playlist.externalUrl) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
+        Opening external course...
+      </div>
+    );
+  }
 
   return (
     <PlaylistView 
@@ -239,9 +252,9 @@ function AppContent() {
   const handleEditClick = (playlist) => requireAuth(() => setEditingPlaylist(playlist));
   
   const handleCreatePlaylist = async (meta, fileList) => {
-    if (!fileList) return;
-
-    const files = Array.from(fileList);
+    const isExternal = meta.isExternal || false;
+    const files = fileList ? Array.from(fileList) : [];
+    
     const isVideo = (file) => (file.type || '').startsWith('video/') || /\.(mp4|webm|ogg|mkv|avi|mov|wmv|m4v)$/i.test(file.name);
     const isNote = (file) => file.type === 'application/pdf' || (file.type || '').startsWith('text/') || /\.(pdf|txt|md|doc|docx)$/i.test(file.name);
     
@@ -252,44 +265,48 @@ function AppContent() {
       title: meta.title,
       description: meta.description,
       cover: meta.cover,
-      folderName: meta.folderName,
-      videoCount: files.filter(isVideo).length,
-      noteCount: files.filter(isNote).length,
+      folderName: meta.folderName || 'External',
+      videoCount: isExternal ? 0 : files.filter(isVideo).length,
+      noteCount: isExternal ? 0 : files.filter(isNote).length,
+      isExternal: isExternal,
+      externalUrl: meta.externalUrl || '',
       createdAt: new Date().toISOString(),
       isPending: true
     };
-
+    
     setPlaylists(prev => [optimisticPlaylist, ...prev]);
-    setSessionFiles(prev => ({ ...prev, [tempId]: fileList }));
+    if (!isExternal) setSessionFiles(prev => ({ ...prev, [tempId]: fileList }));
+    
     setIsAddModalOpen(false);
     navigate('/library');
 
     try {
       const payload = {
-        title: meta.title, description: meta.description, cover: meta.cover, 
-        folderName: meta.folderName, videoCount: files.filter(isVideo).length, noteCount: files.filter(isNote).length,
+        title: meta.title, 
+        description: meta.description, 
+        cover: meta.cover, 
+        folderName: meta.folderName || 'External', 
+        videoCount: optimisticPlaylist.videoCount, 
+        noteCount: optimisticPlaylist.noteCount,
+        isExternal: optimisticPlaylist.isExternal,
+        externalUrl: optimisticPlaylist.externalUrl
       };
       
       const { data } = await api.post('/courses', payload);
       const newPlaylist = { ...data, id: data._id };
-
-      setPlaylists(prev => prev.map(playlist => (
-        playlist.id === tempId ? newPlaylist : playlist
-      )));
-      setSessionFiles(prev => {
-        const updatedFiles = { ...prev, [newPlaylist.id]: prev[tempId] || fileList };
-        delete updatedFiles[tempId];
-        return updatedFiles;
-      });
-
+      
+      setPlaylists(prev => prev.map(playlist => (playlist.id === tempId ? newPlaylist : playlist)));
+      
+      if (!isExternal) {
+        setSessionFiles(prev => {
+          const updatedFiles = { ...prev, [newPlaylist.id]: prev[tempId] || fileList };
+          delete updatedFiles[tempId];
+          return updatedFiles;
+        });
+      }
     } catch (err) {
       console.error(err);
       setPlaylists(prev => prev.filter(playlist => playlist.id !== tempId));
-      setSessionFiles(prev => {
-        const updatedFiles = { ...prev };
-        delete updatedFiles[tempId];
-        return updatedFiles;
-      });
       alert("Failed to create course in cloud database.");
     }
   };
@@ -625,9 +642,10 @@ function AppContent() {
       {/* MODALS */}
       {isAddModalOpen && (
         <AddPlaylistModal 
-          onCancel={() => setIsAddModalOpen(false)} 
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)} 
           onSubmit={handleCreatePlaylist} 
-          onHome={() => navigate('/')}
+          isDarkMode={isDarkMode}
         />
       )}
 

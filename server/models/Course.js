@@ -5,16 +5,16 @@ const courseSchema = new mongoose.Schema({
   title: { type: String, required: true },
   description: { type: String, default: '' },
   cover: { type: String, default: '' },
-  folderName: { type: String, required: true }, 
+  folderName: { type: String, default: 'External' }, // Removed required: true
   videoCount: { type: Number, default: 0 },
   noteCount: { type: Number, default: 0 },
-  // ADDED: For custom button links
-  customLinks: [{
-    label: String,
-    url: String
-  }],
-  // ADDED: For library organization
-  tags: [String] 
+  
+  // NEW FIELDS
+  isExternal: { type: Boolean, default: false },
+  externalUrl: { type: String, default: '' },
+  
+  customLinks: [{ label: String, url: String }],
+  tags: [String]
 }, { timestamps: true });
 
 module.exports = mongoose.model('Course', courseSchema);

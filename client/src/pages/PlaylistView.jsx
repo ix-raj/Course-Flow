@@ -388,7 +388,7 @@ export default function PlaylistView({ playlist, files, onBack, onReconnect, use
                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 transition-colors">
                       <div className="flex-1 sm:pr-4">
                         <span className={`text-xs font-black uppercase tracking-widest mb-1 block ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Lesson {currentVideoIndex + 1}</span>
-                        <h2 className={`text-lg sm:text-xl md:text-2xl font-bold leading-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{currentFile.name}</h2>
+                        <h2 className={`text-lg sm:text-xl md:text-2xl font-bold leading-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{formatFileName(currentFile.name)}</h2>
                       </div>
                       
                       <div className="flex flex-row items-stretch sm:items-center gap-2 shrink-0 w-full sm:w-auto">

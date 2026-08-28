@@ -18,11 +18,11 @@ router.get('/', protect, async (req, res) => {
 // @route   POST /api/courses
 router.post('/', protect, async (req, res) => {
   try {
-    const { title, description, cover, folderName, videoCount, noteCount } = req.body;
-
+    const { title, description, cover, folderName, videoCount, noteCount, isExternal, externalUrl } = req.body;
+    
     const course = await Course.create({
       user: req.user._id,
-      title, description, cover, folderName, videoCount, noteCount
+      title, description, cover, folderName, videoCount, noteCount, isExternal, externalUrl
     });
 
     await Workspace.create({
@@ -30,7 +30,7 @@ router.post('/', protect, async (req, res) => {
       course: course._id,
       videoProgress: {}
     });
-
+    
     res.status(201).json(course);
   } catch (error) {
     res.status(500).json({ message: 'Failed to create course' });

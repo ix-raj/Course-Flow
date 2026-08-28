@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, Video, FileText, Trash2, Edit2 } from 'lucide-react';
+import { Play, Video, FileText, Trash2, Edit2, Link as LinkIcon } from 'lucide-react';
 
 // --- UTILS ---
 import { calculateCourseProgress } from '../../utils/metrics';
@@ -7,6 +7,16 @@ import { calculateCourseProgress } from '../../utils/metrics';
 export function CourseCard({ playlist, onClick, onDelete, onEdit, isDarkMode, userData }) {
   
   const progress = calculateCourseProgress(playlist, userData);
+  const platformName = playlist.isExternal
+    ? (() => {
+        const lowerUrl = (playlist.externalUrl || '').toLowerCase();
+        if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) return 'YouTube';
+        if (lowerUrl.includes('coursera.org')) return 'Coursera';
+        if (lowerUrl.includes('udemy.com')) return 'Udemy';
+        if (lowerUrl.includes('scrimba.com')) return 'Scrimba';
+        return 'Web Link';
+      })()
+    : '';
 
   return (
     <div 
@@ -23,6 +33,13 @@ export function CourseCard({ playlist, onClick, onDelete, onEdit, isDarkMode, us
         ) : (
           <div className={`w-full h-full flex items-center justify-center ${isDarkMode ? 'bg-[#0F172A]' : 'bg-gradient-to-br from-slate-50 to-slate-200'}`}>
             <Video className={`h-10 w-10 ${isDarkMode ? 'text-slate-600' : 'text-slate-300'}`} />
+          </div>
+        )}
+
+        {playlist.isExternal && (
+          <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 rounded-full border border-white/10 bg-black/70 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md shadow-sm">
+            <LinkIcon className="h-3 w-3 text-indigo-300" />
+            <span>{platformName}</span>
           </div>
         )}
         
@@ -57,10 +74,15 @@ export function CourseCard({ playlist, onClick, onDelete, onEdit, isDarkMode, us
       </div>
 
       {/* Card Content */}
-      <div className="p-3 sm:p-5 flex-1 flex flex-col">
-        <h3 className={`text-sm sm:text-base font-semibold line-clamp-1 mb-1 transition-colors duration-200 ${isDarkMode ? 'text-slate-100 group-hover:text-indigo-400' : 'text-slate-900 group-hover:text-indigo-600'}`}>
-          {playlist.title}
-        </h3>
+        <div className="p-3 sm:p-5 flex-1 flex flex-col">
+          <h3 className={`text-sm sm:text-base font-semibold line-clamp-1 mb-1 transition-colors duration-200 ${isDarkMode ? 'text-slate-100 group-hover:text-indigo-400' : 'text-slate-900 group-hover:text-indigo-600'}`}>
+            {playlist.title}
+          </h3>
+          {playlist.isExternal && (
+            <p className={`text-[10px] font-black uppercase tracking-widest mb-2 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+              External course
+            </p>
+          )}
        
         {/* Progress & Meta Area */}
         <div className="mt-auto">
