@@ -5,7 +5,8 @@ import { BrowserRouter as Router, Routes, Route, useNavigate, useParams, Navigat
 import LandingPage from './pages/LandingPage';
 import CoursesView from './pages/CoursesView';
 import PlaylistView from './pages/PlaylistView';
-import GoalsPage from './pages/GoalsPage';
+import RoutinePage from './pages/RoutinePage';
+import SettingsPage from './pages/SettingsPage';
 import AuthPage from './pages/AuthPage';
 import AddPlaylistModal from './components/modals/AddPlaylistModal';
 import EditPlaylistModal from './components/modals/EditPlaylistModal';
@@ -78,7 +79,7 @@ function AppContent() {
   const [playlists, setPlaylists] = useState([]);
   const [userData, setUserData] = useState({});
   const [productivityData, setProductivityData] = useState({
-    weeklyPlan: {},
+    weeklyRoutine: {},
     completionLog: {},
     monthlyEvents: {}
   });
@@ -96,7 +97,7 @@ function AppContent() {
     try {
       const { data } = await api.put('/productivity', updates);
       setProductivityData(prev => ({
-        weeklyPlan: data.weeklyPlan || prev.weeklyPlan,
+        weeklyRoutine: data.weeklyRoutine || prev.weeklyRoutine,
         completionLog: data.completionLog || prev.completionLog,
         monthlyEvents: data.monthlyEvents || prev.monthlyEvents
       }));
@@ -146,7 +147,7 @@ function AppContent() {
       setPlaylists([]);
       setUserData({});
       setProductivityData({
-        weeklyPlan: {},
+        weeklyRoutine: {},
         completionLog: {},
         monthlyEvents: {}
       });
@@ -198,7 +199,7 @@ function AppContent() {
         });
         setUserData(cloudUserData);
         setProductivityData({
-          weeklyPlan: productivityRes.data?.weeklyPlan || {},
+          weeklyRoutine: productivityRes.data?.weeklyRoutine || {},
           completionLog: productivityRes.data?.completionLog || {},
           monthlyEvents: productivityRes.data?.monthlyEvents || {}
         });
@@ -594,16 +595,27 @@ function AppContent() {
 
         <Route path="/course/:id" element={<CourseRoute playlists={playlists} sessionFiles={sessionFiles} setSessionFiles={setSessionFiles} userData={userData} updateFileTime={updateFileTime} toggleFileCompletion={toggleFileCompletion} addEntry={addEntry} removeEntry={removeEntry} toggleTask={toggleTask} updateDoubtAnswer={updateDoubtAnswer} updateCourseMeta={updateCourseMeta} updateCourseLinks={updateCourseLinks} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} navigate={navigate}/>} />
         
-        <Route 
-          path="/goals" 
+       <Route 
+          path="/routine" 
           element={
-            <GoalsPage 
+            <RoutinePage 
               playlists={playlists || []} 
-              userData={userData || {}} 
-              initialProductivityData={productivityData}
+              productivityData={productivityData}
               isDarkMode={isDarkMode} 
               setIsDarkMode={setIsDarkMode}
-              onSync={updateProductivity} // Pass the new sync function
+              onSync={updateProductivity} 
+            />
+          } 
+        />
+        <Route 
+          path="/routine/settings" 
+          element={
+            <SettingsPage 
+              playlists={playlists || []} 
+              productivityData={productivityData}
+              isDarkMode={isDarkMode} 
+              setIsDarkMode={setIsDarkMode}
+              onSync={updateProductivity} 
             />
           } 
         />

@@ -16,7 +16,7 @@ export function Header({ isDarkMode, setIsDarkMode, activePage, positionClass = 
   const navItems = [
     { id: 'home', label: 'Home', path: '/' },
     { id: 'library', label: 'My Library', path: '/library' },
-    { id: 'goals', label: 'Goals', path: '/goals' }
+    { id: 'routine', label: 'Routine', path: '/routine' }
   ];
 
   useEffect(() => {
