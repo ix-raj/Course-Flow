@@ -18,10 +18,21 @@ import {
 import { getTodayDay, getTodayDateStr } from '../utils/dateUtils';
 import { calculateCourseProgress, formatStudyHours } from '../utils/metrics';
 
+const getPlatformName = (url) => {
+  if (!url) return 'External';
+  const lowerUrl = url.toLowerCase();
+  if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) return 'YouTube';
+  if (lowerUrl.includes('coursera.org')) return 'Coursera';
+  if (lowerUrl.includes('udemy.com')) return 'Udemy';
+  if (lowerUrl.includes('scrimba.com')) return 'Scrimba';
+  return 'Web Link';
+};
+
 // INLINE COMPONENT: DASHBOARD COURSE CARD
 const DashboardCourseCard = ({ playlist, onClick, userData, isDarkMode }) => {
 
   const progress = calculateCourseProgress(playlist, userData);
+  const platformName = playlist.isExternal ? getPlatformName(playlist.externalUrl) : '';
 
   return (
     <div 
@@ -35,19 +46,30 @@ const DashboardCourseCard = ({ playlist, onClick, userData, isDarkMode }) => {
           ) : (
              <div className="w-full h-full flex items-center justify-center bg-slate-800"><Monitor className="w-8 h-8 text-indigo-500" /></div>
           )}
+          {playlist.isExternal && (
+            <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 rounded-full border border-white/10 bg-black/70 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md shadow-sm">
+              <Sparkles className="h-3 w-3 text-indigo-300" />
+              <span>{platformName}</span>
+            </div>
+          )}
           {/* Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-90" />
           
           {/* Hover Action (Play Button) */}
           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/20 backdrop-blur-[2px]">
              <div className="bg-indigo-500 text-white px-5 py-2.5 rounded-full text-sm font-semibold flex items-center gap-2 transform translate-y-2 group-hover:translate-y-0 transition-all duration-200 shadow-md">
-                <PlayCircle className="w-4 h-4" /> Continue
+                <PlayCircle className="w-4 h-4" /> {playlist.isExternal ? 'Open' : 'Continue'}
              </div>
           </div>
        </div>
 
        <div className="p-3 sm:p-4 flex flex-col flex-1">
           <h3 className={`text-sm sm:text-base font-bold line-clamp-1 mb-1 ${isDarkMode ? 'text-slate-100' : 'text-slate-900'}`}>{playlist.title}</h3>
+          {playlist.isExternal && (
+            <p className={`text-[10px] font-black uppercase tracking-widest mb-2 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+              External course
+            </p>
+          )}
           <p className={`text-[11px] sm:text-xs font-medium mb-3 sm:mb-5 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{playlist.videoCount} Lessons</p>
           
           <div className="mt-auto">
@@ -325,7 +347,13 @@ export default function LandingPage({ playlists, onViewCourses, onOpen, userData
                 <DashboardCourseCard 
                   key={playlist.id} 
                   playlist={playlist} 
-                  onClick={() => onOpen(playlist.id)} 
+                  onClick={() => {
+                    if (playlist.isExternal && playlist.externalUrl) {
+                      window.open(playlist.externalUrl, '_blank', 'noopener,noreferrer');
+                      return;
+                    }
+                    onOpen(playlist.id);
+                  }} 
                   userData={userData[playlist.id] || {}}
                   isDarkMode={isDarkMode}
                 />

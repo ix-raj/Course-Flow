@@ -67,6 +67,8 @@ export default function CoursesView({
     return "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6";
   };
 
+
+  
   return (
     <div className={`min-h-screen flex flex-col transition-colors duration-300 font-['Inter',sans-serif] ${isDarkMode ? 'bg-slate-1000 text-slate-200' : 'bg-[#F8FAFC] text-slate-800'}`}>
       
@@ -95,7 +97,7 @@ export default function CoursesView({
             {/* PAGE TITLE */}
             <div className="z-30 max-w-xl">
                <h1 className={`text-[1.9rem] sm:text-3xl font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>My Library</h1>
-               <p className={`text-xs sm:text-sm font-medium mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Manage and access all your local courses.</p>
+                <p className={`text-xs sm:text-sm font-medium mt-1 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Manage and access your local and external courses.</p>
             </div>
 
             {/* PREMIUM TOOLBAR */}
@@ -232,11 +234,17 @@ export default function CoursesView({
             </div>
           ) : (
             <div className={`mt-2 sm:mt-4 grid ${getGridClass()} gap-5 pb-20`}>
-             {filteredAndSortedPlaylists.map(playlist => (
+              {filteredAndSortedPlaylists.map(playlist => (
                 <CourseCard 
                   key={playlist.id} 
                   playlist={playlist} 
-                  onClick={() => onOpen(playlist.id)} 
+                  onClick={() => {
+                    if (playlist.isExternal && playlist.externalUrl) {
+                      window.open(playlist.externalUrl, '_blank', 'noopener,noreferrer');
+                      return;
+                    }
+                    onOpen(playlist.id);
+                  }} 
                   onDelete={onDelete} 
                   onEdit={onEdit}
                   isDarkMode={isDarkMode}
