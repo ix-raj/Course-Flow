@@ -24,12 +24,12 @@ export function CourseCard({ playlist, onClick, onDelete, onEdit, isDarkMode, us
       className={`group flex flex-col h-full rounded-xl sm:rounded-2xl overflow-hidden border transition-all duration-200 ease-out hover:scale-[1.02] hover:shadow-xl relative cursor-pointer
         ${isDarkMode 
           ? 'bg-[#1E293B] border-white/10 hover:border-slate-500 hover:shadow-black/40' 
-          : 'bg-white border-slate-200 hover:border-slate-400 hover:shadow-black/5'}`}
+          : 'bg-white/95 border-slate-200/80 hover:border-indigo-200 hover:shadow-[0_12px_30px_rgba(15,23,42,0.08)]'}`}
     >
       {/* Card Image */}
-      <div className={`aspect-video w-full relative overflow-hidden border-b ${isDarkMode ? 'bg-[#0F172A] border-white/5' : 'bg-slate-100 border-slate-100'}`}>
+      <div className={`aspect-video w-full relative overflow-hidden border-b ${isDarkMode ? 'bg-[#0F172A] border-white/5' : 'bg-slate-100/80 border-slate-100'}`}>
         {playlist.cover ? (
-          <img src={playlist.cover} alt={playlist.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+          <img src={playlist.cover} alt={playlist.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.015]" />
         ) : (
           <div className={`w-full h-full flex items-center justify-center ${isDarkMode ? 'bg-[#0F172A]' : 'bg-gradient-to-br from-slate-50 to-slate-200'}`}>
             <Video className={`h-10 w-10 ${isDarkMode ? 'text-slate-600' : 'text-slate-300'}`} />
@@ -74,8 +74,8 @@ export function CourseCard({ playlist, onClick, onDelete, onEdit, isDarkMode, us
       </div>
 
       {/* Card Content */}
-        <div className="p-3 sm:p-5 flex-1 flex flex-col">
-          <h3 className={`text-sm sm:text-base font-semibold line-clamp-1 mb-1 transition-colors duration-200 ${isDarkMode ? 'text-slate-100 group-hover:text-indigo-400' : 'text-slate-900 group-hover:text-indigo-600'}`}>
+        <div className={`p-3 sm:p-5 flex-1 flex flex-col ${isDarkMode ? '' : 'bg-gradient-to-b from-white to-slate-50/40'}`}>
+          <h3 className={`text-sm sm:text-base font-semibold line-clamp-1 mb-1 transition-colors duration-200 ${isDarkMode ? 'text-slate-100 group-hover:text-indigo-400' : 'text-slate-900 group-hover:text-indigo-700'}`}>
             {playlist.title}
           </h3>
           {playlist.isExternal && (

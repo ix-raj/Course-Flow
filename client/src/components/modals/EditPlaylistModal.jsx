@@ -27,8 +27,8 @@ export default function EditPlaylistModal({ playlist, onCancel, onSave }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-[#06142e] backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl max-w-lg w-full p-8 shadow-2xl relative animate-in fade-in zoom-in duration-200">
+    <div className="fixed inset-0 bg-black/55 backdrop-blur-md flex items-center justify-center p-4 z-50">
+      <div className="bg-white/95 rounded-2xl max-w-lg w-full p-8 shadow-2xl relative animate-in fade-in zoom-in duration-200 border border-slate-200/80">
         <button onClick={onCancel} disabled={isSaving} className="absolute top-4 right-4 text-slate-400 hover:text-slate-800 transition-colors disabled:opacity-50">
             <X className="h-6 w-6" />
         </button>
@@ -44,7 +44,7 @@ export default function EditPlaylistModal({ playlist, onCancel, onSave }) {
                   value={title} 
                   disabled={isSaving}
                   onChange={(e) => setTitle(e.target.value)} 
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-slate-900 font-medium focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none disabled:opacity-70" 
+                  className="w-full bg-[#F6F8FC] border border-slate-200/80 rounded-lg px-4 py-3 text-slate-900 font-medium focus:ring-2 focus:ring-indigo-500/40 focus:border-transparent transition-all outline-none disabled:opacity-70" 
                 />
             </div>
             
@@ -55,14 +55,14 @@ export default function EditPlaylistModal({ playlist, onCancel, onSave }) {
                   disabled={isSaving}
                   onChange={(e) => setDesc(e.target.value)} 
                   rows={3} 
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-slate-900 font-medium focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none resize-none disabled:opacity-70" 
+                  className="w-full bg-[#F6F8FC] border border-slate-200/80 rounded-lg px-4 py-3 text-slate-900 font-medium focus:ring-2 focus:ring-indigo-500/40 focus:border-transparent transition-all outline-none resize-none disabled:opacity-70" 
                 />
             </div>
             
             <div>
                 <label className="block text-sm font-bold text-slate-700 mb-1.5">Cover Image</label>
                 <div className="flex items-center gap-4">
-                    <div className="h-20 w-32 bg-slate-100 rounded-lg overflow-hidden border border-slate-200 flex items-center justify-center shrink-0 relative group">
+                    <div className="h-20 w-32 bg-slate-100 rounded-lg overflow-hidden border border-slate-200 flex items-center justify-center shrink-0 relative group shadow-sm">
                         {cover ? (
                           <img src={cover} alt="Preview" className="h-full w-full object-cover" />
                         ) : (
@@ -79,7 +79,7 @@ export default function EditPlaylistModal({ playlist, onCancel, onSave }) {
                          accept="image/*" 
                          disabled={isSaving}
                          onChange={handleCoverSelect} 
-                         className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer disabled:opacity-70" 
+                       className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer disabled:opacity-70" 
                        />
                        <p className="text-xs text-slate-400 mt-2">Recommended: 16:9 aspect ratio</p>
                     </div>
@@ -91,7 +91,7 @@ export default function EditPlaylistModal({ playlist, onCancel, onSave }) {
                 <button 
                     onClick={handleSubmit} 
                     disabled={isSaving || !title.trim()} 
-                    className="min-w-[160px] px-6 py-2.5 bg-[#06142e] hover:bg-blue-900 text-white rounded-lg font-bold shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="min-w-[160px] px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold shadow-lg shadow-indigo-900/20 flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {isSaving ? (
                       <>

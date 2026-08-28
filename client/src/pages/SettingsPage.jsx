@@ -156,13 +156,13 @@ export default function SettingsPage({ playlists, productivityData, isDarkMode, 
   };
 
   return (
-    <div className={`min-h-screen flex flex-col font-['Inter',sans-serif] transition-colors duration-300 ${isDarkMode ? 'bg-[#0B1121] text-slate-300' : 'bg-slate-50 text-slate-800'}`}>
+    <div className={`min-h-screen flex flex-col font-['Inter',sans-serif] transition-colors duration-300 ${isDarkMode ? 'bg-[#0B1121] text-slate-300' : 'bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.08),transparent_30%),linear-gradient(180deg,#F5F7FB_0%,#EEF2F8_100%)] text-slate-800'}`}>
       <Header isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} activePage="routine" />
 
       <div className="w-[96%] max-w-[1400px] mx-auto pt-6 pb-12 flex-1 flex flex-col">
         
         {/* STUDIO HEADER */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-8 border-b pb-6 border-white/5">
+        <div className={`flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-8 border-b pb-6 ${isDarkMode ? 'border-white/5' : 'border-slate-200/80'}`}>
           <div>
             <button onClick={() => navigate('/routine')} className={`flex items-center gap-2 text-sm font-bold mb-4 transition-colors ${isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'}`}>
               <ArrowLeft className="w-4 h-4" /> Back to Dashboard
@@ -175,14 +175,14 @@ export default function SettingsPage({ playlists, productivityData, isDarkMode, 
           <div className="flex items-center gap-3">
             <button 
               onClick={() => { setCopyModalOpen(true); setCopyTargets([]); }}
-              className={`px-4 py-2 rounded-xl flex items-center gap-2 font-bold text-sm transition-all border ${isDarkMode ? 'bg-white/5 hover:bg-white/10 text-slate-300 border-white/10' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'}`}
+              className={`px-4 py-2 rounded-xl flex items-center gap-2 font-bold text-sm transition-all border ${isDarkMode ? 'bg-white/5 hover:bg-white/10 text-slate-300 border-white/10' : 'bg-white/80 hover:bg-white text-slate-700 border-slate-200/80 shadow-sm'}`}
             >
               <Copy className="w-4 h-4" /> Export Routine
             </button>
             <button 
               onClick={saveToCloud}
               disabled={!hasUnsavedChanges}
-              className={`px-6 py-2 rounded-xl flex items-center gap-2 font-bold text-sm transition-all shadow-md ${hasUnsavedChanges ? (isDarkMode ? 'bg-emerald-500 hover:bg-emerald-400 text-white shadow-emerald-500/20' : 'bg-emerald-500 hover:bg-emerald-600 text-white') : (isDarkMode ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : 'bg-slate-200 text-slate-400 cursor-not-allowed')}`}
+              className={`px-6 py-2 rounded-xl flex items-center gap-2 font-bold text-sm transition-all shadow-md ${hasUnsavedChanges ? (isDarkMode ? 'bg-emerald-500 hover:bg-emerald-400 text-white shadow-emerald-500/20' : 'bg-emerald-500 hover:bg-emerald-600 text-white') : (isDarkMode ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : 'bg-slate-100 text-slate-400 cursor-not-allowed')}`}
             >
               Save Changes
             </button>
@@ -237,7 +237,7 @@ export default function SettingsPage({ playlists, productivityData, isDarkMode, 
                             <div 
                               ref={provided.innerRef} 
                               {...provided.draggableProps} 
-                              className={`p-4 sm:p-5 rounded-[24px] border transition-all duration-200 flex flex-col sm:flex-row gap-5 items-center relative bg-clip-padding ${snapshot.isDragging ? 'shadow-2xl scale-[1.02] z-50 ring-2 ring-indigo-500' : 'shadow-sm'} ${isDarkMode ? 'bg-[#0F172A] border-white/10' : 'bg-white border-slate-200'}`}
+                              className={`p-4 sm:p-5 rounded-[24px] border transition-all duration-200 flex flex-col sm:flex-row gap-5 items-center relative bg-clip-padding ${snapshot.isDragging ? 'shadow-2xl scale-[1.02] z-50 ring-2 ring-indigo-500' : 'shadow-sm'} ${isDarkMode ? 'bg-[#0F172A] border-white/10' : 'bg-white/90 border-slate-200/80 shadow-[0_10px_26px_rgba(15,23,42,0.05)]'}`}
                             >
                               {/* Drag Handle & Trash */}
                               <div {...provided.dragHandleProps} className={`absolute left-0 top-1/2 -translate-y-1/2 p-2 cursor-grab active:cursor-grabbing ${isDarkMode ? 'text-slate-600 hover:text-slate-400' : 'text-slate-300 hover:text-slate-500'}`}>
@@ -266,14 +266,14 @@ export default function SettingsPage({ playlists, productivityData, isDarkMode, 
                                     <label className={`text-[10px] font-bold uppercase tracking-widest pl-1 mb-1 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Title</label>
                                     <input 
                                       type="text" value={task.title} onChange={e => updateTask(task.id, 'title', e.target.value)}
-                                      className={`w-full px-3 py-2.5 rounded-xl border text-sm font-semibold outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all ${isDarkMode ? 'bg-black/30 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}
+                                    className={`w-full px-3 py-2.5 rounded-xl border text-sm font-semibold outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all ${isDarkMode ? 'bg-black/30 border-slate-700 text-white' : 'bg-[#F6F8FC] border-slate-200/80 text-slate-900'}`}
                                     />
                                   </div>
                                   <div className="w-24 shrink-0 flex flex-col">
                                     <label className={`text-[10px] font-bold uppercase tracking-widest pl-1 mb-1 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Mins</label>
                                     <input 
                                       type="number" min="0" value={task.duration} onChange={e => updateTask(task.id, 'duration', parseInt(e.target.value)||0)}
-                                      className={`w-full px-3 py-2.5 rounded-xl border text-sm font-semibold outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all ${isDarkMode ? 'bg-black/30 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}
+                                      className={`w-full px-3 py-2.5 rounded-xl border text-sm font-semibold outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all ${isDarkMode ? 'bg-black/30 border-slate-700 text-white' : 'bg-[#F6F8FC] border-slate-200/80 text-slate-900'}`}
                                     />
                                   </div>
                                 </div>
@@ -284,11 +284,11 @@ export default function SettingsPage({ playlists, productivityData, isDarkMode, 
                                     <label className={`text-[10px] font-bold uppercase tracking-widest pl-1 mb-1 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Description</label>
                                     <input 
                                       type="text" value={task.subtitle} onChange={e => updateTask(task.id, 'subtitle', e.target.value)}
-                                      className={`w-full px-3 py-2.5 rounded-xl border text-sm font-semibold outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all ${isDarkMode ? 'bg-black/30 border-slate-700 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-600'}`}
+                                      className={`w-full px-3 py-2.5 rounded-xl border text-sm font-semibold outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all ${isDarkMode ? 'bg-black/30 border-slate-700 text-slate-300' : 'bg-[#F6F8FC] border-slate-200/80 text-slate-600'}`}
                                     />
                                   </div>
                                   <div className="shrink-0 w-36">
-                                    <button onClick={() => setLinkModalTarget(task.id)} className={`h-11 w-full px-3 flex items-center justify-center gap-2 rounded-xl text-xs font-bold border transition-colors ${task.linkedCourseId || task.customLink?.url ? (isDarkMode ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/30' : 'bg-indigo-50 border-indigo-200 text-indigo-600 hover:bg-indigo-100') : (isDarkMode ? 'bg-transparent border-slate-700 text-slate-400 hover:bg-slate-800 hover:text-white' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100 hover:text-slate-700')}`}>
+                                    <button onClick={() => setLinkModalTarget(task.id)} className={`h-11 w-full px-3 flex items-center justify-center gap-2 rounded-xl text-xs font-bold border transition-colors ${task.linkedCourseId || task.customLink?.url ? (isDarkMode ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/30' : 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100') : (isDarkMode ? 'bg-transparent border-slate-700 text-slate-400 hover:bg-slate-800 hover:text-white' : 'bg-white border-slate-200/80 text-slate-500 hover:bg-slate-100 hover:text-slate-700 shadow-sm')}`}>
                                       <LinkIcon className="w-3.5 h-3.5" /> 
                                       <span className="truncate">{task.linkedCourseId ? 'Course' : task.customLink?.url ? 'External Link' : 'Attach'}</span>
                                     </button>
@@ -313,12 +313,12 @@ export default function SettingsPage({ playlists, productivityData, isDarkMode, 
 
           {/* RIGHT: Events Calendar */}
           <div className="lg:col-span-4 space-y-6">
-            <div className={`rounded-[24px] p-6 border shadow-lg flex flex-col ${isDarkMode ? 'bg-[#0F172A]/40 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
+            <div className={`rounded-[24px] p-6 border shadow-lg flex flex-col ${isDarkMode ? 'bg-[#0F172A]/40 border-white/10' : 'bg-white/90 border-slate-200/80 shadow-[0_12px_30px_rgba(15,23,42,0.06)]'}`}>
               <div className="flex items-center justify-between mb-6">
                 <h3 className={`text-lg font-bold flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}><CalendarIcon className="w-5 h-5 text-indigo-500"/> Events</h3>
                 <div className="flex gap-2">
-                  <button onClick={() => { if(currentMonth===0){setCurrentMonth(11);setCurrentYear(y=>y-1)}else setCurrentMonth(m=>m-1) }} className={`p-1.5 rounded-lg border transition-all ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-white/50 border-slate-200 hover:bg-white text-slate-700 shadow-sm'}`}><ChevronLeft className="w-4 h-4" /></button>
-                  <button onClick={() => { if(currentMonth===11){setCurrentMonth(0);setCurrentYear(y=>y+1)}else setCurrentMonth(m=>m+1) }} className={`p-1.5 rounded-lg border transition-all ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-white/50 border-slate-200 hover:bg-white text-slate-700 shadow-sm'}`}><ChevronRight className="w-4 h-4" /></button>
+                  <button onClick={() => { if(currentMonth===0){setCurrentMonth(11);setCurrentYear(y=>y-1)}else setCurrentMonth(m=>m-1) }} className={`p-1.5 rounded-lg border transition-all ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-white border-slate-200/80 hover:bg-slate-50 text-slate-700 shadow-sm'}`}><ChevronLeft className="w-4 h-4" /></button>
+                  <button onClick={() => { if(currentMonth===11){setCurrentMonth(0);setCurrentYear(y=>y+1)}else setCurrentMonth(m=>m+1) }} className={`p-1.5 rounded-lg border transition-all ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-white border-slate-200/80 hover:bg-slate-50 text-slate-700 shadow-sm'}`}><ChevronRight className="w-4 h-4" /></button>
                 </div>
               </div>
               <div className={`text-center font-black mb-4 ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>{monthNames[currentMonth]} {currentYear}</div>
@@ -332,7 +332,7 @@ export default function SettingsPage({ playlists, productivityData, isDarkMode, 
                   const hasEvents = monthlyEvents[dateStr]?.length > 0;
                   const isToday = getTodayDateStr() === dateStr;
                   return (
-                    <button key={dateStr} onClick={() => setEventModalDate(dateStr)} className={`relative p-2 aspect-square rounded-xl font-bold text-sm transition-colors border ${isToday ? 'border-indigo-500 text-indigo-500' : isDarkMode ? 'border-transparent text-slate-300 hover:bg-white/10' : 'border-transparent text-slate-700 hover:bg-slate-100'}`}>
+                    <button key={dateStr} onClick={() => setEventModalDate(dateStr)} className={`relative p-2 aspect-square rounded-xl font-bold text-sm transition-colors border ${isToday ? 'border-indigo-500 text-indigo-600 bg-indigo-50' : isDarkMode ? 'border-transparent text-slate-300 hover:bg-white/10' : 'border-transparent text-slate-700 hover:bg-white shadow-sm'}`}>
                       {day}
                       {hasEvents && <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-indigo-500"></div>}
                     </button>
@@ -347,7 +347,7 @@ export default function SettingsPage({ playlists, productivityData, isDarkMode, 
       {/* --- EVENT MODAL --- */}
       {eventModalDate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className={`w-full max-w-sm p-6 rounded-3xl border shadow-2xl ${isDarkMode ? 'bg-[#0F172A] border-slate-700' : 'bg-white border-slate-200'}`}>
+          <div className={`w-full max-w-sm p-6 rounded-3xl border shadow-2xl ${isDarkMode ? 'bg-[#0F172A] border-slate-700' : 'bg-white/95 border-slate-200/80'}`}>
             <h3 className={`text-lg font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Add Event for {new Date(eventModalDate).toLocaleDateString()}</h3>
             <div className="space-y-4">
               <input type="text" placeholder="Event Title" value={formTitle} onChange={e => setFormTitle(e.target.value)} className={`w-full px-4 py-3 rounded-xl border text-sm font-semibold outline-none focus:ring-2 focus:ring-indigo-500/50 ${isDarkMode ? 'bg-black/30 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`} />
