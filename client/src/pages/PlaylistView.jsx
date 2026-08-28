@@ -16,7 +16,8 @@ export default function PlaylistView({ playlist, files, onBack, onReconnect, use
   const [activeTab, setActiveTab] = useState('videos'); 
   const [currentFile, setCurrentFile] = useState(null);
   const [isReconnecting, setIsReconnecting] = useState(false);
-  
+  const [selectedPdf, setSelectedPdf] = useState(null);
+
   // --- SEARCH STATES ---
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -31,12 +32,17 @@ export default function PlaylistView({ playlist, files, onBack, onReconnect, use
   const [isGoalsExpanded, setIsGoalsExpanded] = useState(false); 
   const [isDoubtsModalOpen, setIsDoubtsModalOpen] = useState(false);
   const [selectedDoubtVideo, setSelectedDoubtVideo] = useState(null);
-  const [isUnlockAll, setIsUnlockAll] = useState(false); 
+  const [isUnlockAll, setIsUnlockAll] = useState(true); 
   const doubtInputRef = useRef(null);
   const courseMeta = userData['_COURSE_META_'] || {
     courseNotes: '',
     notionUrl: '',
     revisionList: []
+  };
+
+  const formatFileName = (name) => {
+    if (!name) return '';
+    return name.replace(/\.[^/.]+$/, ""); // Strips the file extension
   };
 
   // Notes & Revision State
@@ -162,12 +168,6 @@ export default function PlaylistView({ playlist, files, onBack, onReconnect, use
     if (!videoFile || !videoFile.name) return null;
     const baseName = videoFile.name.substring(0, videoFile.name.lastIndexOf('.'));
     return fileList.find(f => f.name.endsWith('.vtt') && f.name.startsWith(baseName));
-  };
-
-  const handleAddGoal = () => {
-    if(!goalInput.trim()) return;
-    onAddEntry(playlist.id, '_COURSE_GOALS_', 'tasks', goalInput);
-    setGoalInput('');
   };
 
   const handleAddDoubt = (vidName, text) => {
@@ -308,35 +308,75 @@ export default function PlaylistView({ playlist, files, onBack, onReconnect, use
                            <span className={`text-[10px] font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{completedGoals}/{courseGoals.length}</span>
                         </div>
                         
-                        <div className="space-y-2 mb-5 mt-4">
-                          {courseGoals.length === 0 && <p className="text-center py-4 text-slate-500 text-sm font-medium">Define your master goals for this course.</p>}
-                          {courseGoals.map((goal, idx) => (
-                            <div key={idx} className="p-3 sm:p-3.5 rounded-2xl sm:rounded-es-full sm:rounded-se-full flex gap-3 sm:gap-5 items-center group transition-all hover:shadow-sm bg-gradient-to-r from-indigo-500 to-cyan-500">
-                               <button onClick={() => onToggleTask(playlist.id, '_COURSE_GOALS_', idx)} className={`mt-0.5 transition-colors ${goal.done ? 'text-indigo-500' : 'text-slate-400 hover:text-indigo-500'}`}>
-                                  {goal.done ? <CheckSquare className="w-5 h-5 text-cyan-300" /> : <Square className="w-5 h-5 text-white" />}
-                               </button>
-                               <div className={`flex-1 text-sm sm:text-base font-bold break-words ${goal.done ? 'text-slate-200 line-through opacity-70' : ('text-slate-200')}`}>
-                                 {goal.text}
-                               </div>
-                               <button onClick={() => onRemoveEntry(playlist.id, '_COURSE_GOALS_', 'tasks', idx)} className="text-slate-300 sm:text-slate-400 hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100 p-1 rounded transition-opacity">
-                                 <Trash2 className="w-4 h-4" />
-                               </button>
-                            </div>
-                          ))}
+                    {/* COURSE GOALS LIST */}
+                  <div className="flex flex-col gap-3 max-h-[300px] overflow-y-auto custom-scrollbar pr-2 mb-5">
+                    {courseGoals.length === 0 && (
+                      <p className={`text-sm font-medium italic text-center py-4 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                        No goals set yet. Add one below!
+                      </p>
+                    )}
+                    
+                    {courseGoals.map((task, i) => (
+                      <div key={i} className={`group flex items-center justify-between gap-3 px-4 py-3.5 rounded-2xl transition-all border ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-slate-50 border-slate-200 hover:bg-white hover:shadow-sm'}`}>
+                        
+                        <div className="flex items-center gap-3.5 min-w-0">
+                          {/* Poppy Checkbox (Matches Routine Page) */}
+                          <button 
+                            onClick={() => onToggleTask(playlist.id, '_COURSE_GOALS_', i)} 
+                            className={`w-6 h-6 rounded-md flex items-center justify-center transition-all duration-300 border-2 shrink-0 ${
+                              task.done 
+                                ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm shadow-emerald-500/20' 
+                                : isDarkMode 
+                                  ? 'border-slate-600 hover:border-emerald-500/50 text-transparent' 
+                                  : 'border-slate-300 hover:border-emerald-500/50 text-transparent'
+                            }`}
+                          >
+                            <Check className={`w-4 h-4 transition-transform duration-300 ${task.done ? 'scale-100 opacity-100' : 'scale-50 opacity-0'}`} strokeWidth={3} />
+                          </button>
+                          
+                          <span className={`text-sm font-semibold break-words transition-colors ${task.done ? (isDarkMode ? 'text-slate-500 line-through' : 'text-slate-400 line-through') : (isDarkMode ? 'text-slate-200' : 'text-slate-800')}`}>
+                            {task.text}
+                          </span>
                         </div>
 
-                        
-                        <div className="flex flex-col sm:flex-row gap-3 mt-8 sm:mt-10">
-                          <input 
-                            type="text" 
-                            value={goalInput}
-                            onChange={(e) => setGoalInput(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleAddGoal()}
-                            placeholder="Add a new assignment or objective..."
-                            className={`flex-1 border rounded-xl px-4 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500/30 transition-all ${isDarkMode ? 'bg-[#1E293B] border-slate-700 text-white placeholder:text-slate-500' : 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'}`}
-                          />
-                          <button onClick={handleAddGoal} className="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-2.5 rounded-xl shadow-sm transition-transform active:scale-95 font-semibold text-sm">Add Goal</button>
-                        </div>
+                        {/* Hover Trash Action */}
+                        <button 
+                          onClick={() => onRemoveEntry(playlist.id, '_COURSE_GOALS_', 'tasks', i)} 
+                          className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-slate-500 hover:bg-red-500/20 hover:text-red-400 transition-all shrink-0"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* ADD GOAL INPUT */}
+                  <div className="flex items-center gap-3 pt-4 border-t border-white/5">
+                    <input 
+                      type="text" 
+                      value={goalInput} 
+                      onChange={e => setGoalInput(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') {
+                          onAddEntry(playlist.id, '_COURSE_GOALS_', 'tasks', goalInput);
+                          setGoalInput('');
+                        }
+                      }}
+                      placeholder="Add a new assignment or objective..."
+                      className={`flex-1 px-4 py-3 rounded-xl border text-sm font-semibold outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all shadow-inner ${isDarkMode ? 'bg-black/30 border-slate-700 text-white placeholder:text-slate-600' : 'bg-slate-50 border-slate-300 text-slate-900 placeholder:text-slate-400'}`}
+                    />
+                    <button 
+                      onClick={() => {
+                        if (goalInput.trim()) {
+                          onAddEntry(playlist.id, '_COURSE_GOALS_', 'tasks', goalInput);
+                          setGoalInput('');
+                        }
+                      }}
+                      className="px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-md transition-all active:scale-95 shrink-0"
+                    >
+                      Add Goal
+                    </button>
+                  </div>
                      </div>
                   )}
                </div>
@@ -438,7 +478,7 @@ export default function PlaylistView({ playlist, files, onBack, onReconnect, use
                
                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 z-10">
                   <h3 className={`text-lg font-bold flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                    <BookOpen className="w-5 h-5 text-indigo-500" /> Database
+                    <BookOpen className="w-5 h-5 text-indigo-500" /> Course
                   </h3>
                   
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
@@ -529,7 +569,7 @@ export default function PlaylistView({ playlist, files, onBack, onReconnect, use
                                      <div className="flex-1">
                                         <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Lesson {idx + 1}</p>
                                         <p className={`text-xs sm:text-sm font-semibold line-clamp-2 ${isActive ? (isDarkMode ? 'text-indigo-400' : 'text-indigo-700') : isCompleted ? (isDarkMode ? 'text-slate-300' : 'text-slate-800') : (isDarkMode ? 'text-slate-400 group-hover:text-white' : 'text-slate-600 group-hover:text-slate-900')}`}>
-                                          {file.name}
+                                          {formatFileName(file.name)}
                                         </p>
                                      </div>
                                      <div className="flex items-center gap-2 shrink-0">
@@ -545,18 +585,67 @@ export default function PlaylistView({ playlist, files, onBack, onReconnect, use
                  </div>
                )}
 
-               {/* Files Tab */}
-               {activeTab === 'files' && (
-                 <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col gap-2 mt-2">
-                    {filesList.length === 0 && <p className="text-slate-500 text-center py-10 font-medium">No Files Found.</p>}
-                    {filesList.map((file, idx) => (
-                       <div key={idx} onClick={() => window.open(URL.createObjectURL(file), '_blank')} className={`p-3 border rounded-xl cursor-pointer flex items-center gap-3 transition-all ${isDarkMode ? 'bg-[#0F172A] border-slate-700 hover:border-slate-500' : 'bg-white border-slate-200 hover:border-slate-300'}`}>
-                          <FileText className={`w-4 h-4 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`} />
-                          <p className={`text-sm font-medium line-clamp-1 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>{file.name}</p>
-                       </div>
+           {/* FILES TAB CONTENT */}
+            {activeTab === 'files' && (
+              <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                {selectedPdf ? (
+                  <div className="flex flex-col h-full min-h-[600px]">
+                    <div className="flex items-center justify-between mb-3">
+                      <button 
+                        onClick={() => setSelectedPdf(null)} 
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${isDarkMode ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}
+                      >
+                        &larr; Back to Files
+                      </button>
+                      
+                      {/* New Button to open the Blob PDF in a full tab where Zoom always works */}
+                      <button 
+                        onClick={() => window.open(selectedPdf, '_blank')} 
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${isDarkMode ? 'bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'}`}
+                      >
+                        Open in Full Tab &#8599;
+                      </button>
+                    </div>
+                    
+                    {/* Swapped iframe for object, which sometimes handles native PDF UI slightly better */}
+                    <object 
+                      data={selectedPdf} 
+                      type="application/pdf"
+                      className={`w-full flex-1 rounded-xl border ${isDarkMode ? 'border-slate-700 bg-slate-300' : 'border-slate-200 bg-white'}`} 
+                    >
+                      <p className="p-4 text-center">Your browser does not support embedded PDFs.</p>
+                    </object>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {filesList.length === 0 && <p className={`text-sm italic p-4 text-center ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>No documents found.</p>}
+                    {filesList.map((f, i) => (
+                      <div key={i} className={`flex items-center justify-between p-3.5 rounded-xl border transition-colors ${isDarkMode ? 'bg-black/20 border-white/5 hover:bg-white/5' : 'bg-slate-50 border-slate-200 hover:bg-white'}`}>
+                        <div className="flex items-center gap-3 min-w-0">
+                          <FileText className={`w-5 h-5 shrink-0 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`} />
+                          <span className={`text-sm font-semibold truncate ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>
+                            {formatFileName(f.name)}
+                          </span>
+                        </div>
+                        <button 
+                          onClick={() => {
+                            if (f.name.toLowerCase().endsWith('.pdf')) {
+                              // Reverted back to clean URL creation
+                              setSelectedPdf(URL.createObjectURL(f));
+                            } else {
+                              window.open(URL.createObjectURL(f), '_blank');
+                            }
+                          }}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold shrink-0 transition-colors ${isDarkMode ? 'bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'}`}
+                        >
+                          Open
+                        </button>
+                      </div>
                     ))}
-                 </div>
-               )}
+                  </div>
+                )}
+              </div>
+            )}
 
                {/* Notepad Tab */}
                {activeTab === 'notes' && (
