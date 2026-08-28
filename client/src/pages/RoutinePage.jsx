@@ -160,7 +160,7 @@ export default function RoutinePage({ playlists, productivityData, isDarkMode, s
           
           {/* Left: Date & Quote */}
           <div className="flex flex-col items-center xl:items-start text-center xl:text-left">
-            <h1 className={`text-4xl md:text-5xl font-black tracking-tight mb-2 transition-colors ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+            <h1 className={`text-3xl md:text-4xl font-black tracking-tight mb-2 transition-colors ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
              Hey It's {todayDay}
             </h1>
             <div className="flex flex-wrap items-center justify-center xl:justify-start gap-3">

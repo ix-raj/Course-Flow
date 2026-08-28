@@ -96,6 +96,7 @@ function AppContent() {
     completionLog: {},
     monthlyEvents: {}
   });
+  const [toast, setToast] = useState(null);
   const [coursesLoading, setCoursesLoading] = useState(false);
   const hydratedThemeForUserRef = useRef(null);
 
@@ -104,6 +105,14 @@ function AppContent() {
     doubts: [],
     tasks: [],
     completed: false
+  };
+
+  const showToast = (message) => {
+    setToast(message);
+
+    setTimeout(() => {
+      setToast(null);
+    }, 3500);
   };
 
   const updateProductivity = async (updates) => {
@@ -581,24 +590,60 @@ function AppContent() {
     }
   };
 
-  // 5. Delete Course (Backend Cleanup)
+  // 5. Delete Course 
   const handleDeletePlaylist = async (playlistId) => {
-    requireAuth(async () => {
-      if (window.confirm("Are you sure you want to delete this course? All cloud progress will be lost.")) {
-        try {
-          // This now triggers the cascading delete we added in Phase 2
-          await api.delete(`/courses/${playlistId}`); 
-          
-          setPlaylists(prev => prev.filter(p => p.id !== playlistId));
-          setUserData(prev => { const newData = { ...prev }; delete newData[playlistId]; return newData; });
-          setSessionFiles(prev => { const newFiles = { ...prev }; delete newFiles[playlistId]; return newFiles; });
-          navigate('/library'); 
-        } catch (err) {
-          console.error("Failed to delete course", err);
-        }
-      }
+  requireAuth(async () => {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this course? All cloud progress will be lost."
+      )
+    ) {
+      return;
+    }
+
+    // Save the current state for rollback
+    const previousPlaylists = playlists;
+    const previousUserData = userData;
+    const previousSessionFiles = sessionFiles;
+
+    // Optimistically update the UI immediately
+    setPlaylists((prev) =>
+      prev.filter((p) => p.id !== playlistId)
+    );
+
+    setUserData((prev) => {
+      const newData = { ...prev };
+      delete newData[playlistId];
+      return newData;
     });
-  };
+
+    setSessionFiles((prev) => {
+      const newFiles = { ...prev };
+      delete newFiles[playlistId];
+      return newFiles;
+    });
+
+    // Navigate immediately — don't wait for the API
+    navigate("/library");
+
+    try {
+      await api.delete(`/courses/${playlistId}`);
+    } catch (err) {
+      console.error("Failed to delete course", err);
+
+      // Roll back the optimistic update
+      setPlaylists(previousPlaylists);
+      setUserData(previousUserData);
+      setSessionFiles(previousSessionFiles);
+
+      // Show error toast
+      showToast(
+        "Couldn't delete the course. Your changes have been restored.",
+        "error"
+      );
+    }
+  });
+};
 
   return (
     <div className={`min-h-screen font-['Roboto',sans-serif] selection:bg-indigo-500/30 ${isDarkMode ? 'bg-[#05050A] text-slate-200' : 'bg-slate-50 text-slate-900'}`}>
@@ -655,6 +700,24 @@ function AppContent() {
           onCancel={() => setEditingPlaylist(null)}
           onSave={handleUpdatePlaylist}
         />
+      )}
+
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999]">
+          <div
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl border shadow-xl
+              text-sm font-medium
+              animate-in fade-in slide-in-from-bottom-2 duration-200
+              ${
+                isDarkMode
+                  ? "bg-slate-900 border-red-500/30 text-slate-100"
+                  : "bg-white border-red-200 text-slate-800"
+              }`}
+          >
+            <div className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
+            <span>{toast}</span>
+          </div>
+        </div>
       )}
     </div>
   );
