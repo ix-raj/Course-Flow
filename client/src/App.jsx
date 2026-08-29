@@ -14,6 +14,7 @@ import EditPlaylistModal from './components/modals/EditPlaylistModal';
 // --- UTILS & CONTEXT ---
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { isExternalCourse, normalizeCourse, normalizeCourseList } from './utils/course';
 
 const getCoursesCacheKey = (userId) => `courseflow_courses_${userId}`;
 
@@ -22,7 +23,7 @@ const readCachedCourses = (userId) => {
 
   try {
     const cached = localStorage.getItem(getCoursesCacheKey(userId));
-    return cached ? JSON.parse(cached) : [];
+    return normalizeCourseList(cached ? JSON.parse(cached) : []);
   } catch (error) {
     console.error("Failed to read cached courses", error);
     return [];
@@ -38,15 +39,16 @@ function CourseRoute({
 }) {
   const { id } = useParams();
   const playlist = (playlists || []).find(p => p.id === id);
+  const externalCourse = isExternalCourse(playlist);
 
   useEffect(() => {
-    if (playlist?.isExternal && playlist.externalUrl) {
+    if (externalCourse && playlist?.externalUrl) {
       window.location.replace(playlist.externalUrl);
     }
-  }, [playlist]);
+  }, [playlist, externalCourse]);
   
   if (!playlist) return <Navigate to="/library" />;
-  if (playlist.isExternal && playlist.externalUrl) {
+  if (externalCourse && playlist.externalUrl) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
         Opening external course...
@@ -186,7 +188,7 @@ function AppContent() {
       setCoursesLoading(true);
       try {
         const courseRes = await api.get('/courses');
-        const cloudPlaylists = courseRes.data.map(c => ({ ...c, id: c._id }));
+        const cloudPlaylists = normalizeCourseList(courseRes.data);
         setPlaylists(cloudPlaylists);
         localStorage.setItem(getCoursesCacheKey(user._id), JSON.stringify(cloudPlaylists));
       } catch (error) {
@@ -268,20 +270,21 @@ function AppContent() {
     const isNote = (file) => file.type === 'application/pdf' || (file.type || '').startsWith('text/') || /\.(pdf|txt|md|doc|docx)$/i.test(file.name);
     
     const tempId = `temp-${Date.now()}`;
-    const optimisticPlaylist = {
+    const optimisticPlaylist = normalizeCourse({
       id: tempId,
       _id: tempId,
       title: meta.title,
       description: meta.description,
       cover: meta.cover,
       folderName: meta.folderName || 'External',
+      courseType: isExternal ? 'external' : 'local',
       videoCount: isExternal ? 0 : files.filter(isVideo).length,
       noteCount: isExternal ? 0 : files.filter(isNote).length,
       isExternal: isExternal,
       externalUrl: meta.externalUrl || '',
       createdAt: new Date().toISOString(),
       isPending: true
-    };
+    });
     
     setPlaylists(prev => [optimisticPlaylist, ...prev]);
     if (!isExternal) setSessionFiles(prev => ({ ...prev, [tempId]: fileList }));
@@ -297,12 +300,15 @@ function AppContent() {
         folderName: meta.folderName || 'External', 
         videoCount: optimisticPlaylist.videoCount, 
         noteCount: optimisticPlaylist.noteCount,
+        courseType: optimisticPlaylist.courseType,
         isExternal: optimisticPlaylist.isExternal,
-        externalUrl: optimisticPlaylist.externalUrl
+        externalUrl: optimisticPlaylist.externalUrl,
+        customLinks: [],
+        tags: []
       };
       
       const { data } = await api.post('/courses', payload);
-      const newPlaylist = { ...data, id: data._id };
+      const newPlaylist = normalizeCourse(data);
       
       setPlaylists(prev => prev.map(playlist => (playlist.id === tempId ? newPlaylist : playlist)));
       
@@ -316,26 +322,39 @@ function AppContent() {
     } catch (err) {
       console.error(err);
       setPlaylists(prev => prev.filter(playlist => playlist.id !== tempId));
+      if (!isExternal) {
+        setSessionFiles(prev => {
+          const next = { ...prev };
+          delete next[tempId];
+          return next;
+        });
+      }
       alert("Failed to create course in cloud database.");
     }
   };
 
   const handleUpdatePlaylist = async (id, updates) => {
-    let previousPlaylist = null;
+    const previousPlaylist = playlists.find(p => p.id === id);
+    if (!previousPlaylist) return;
 
-    setPlaylists(prev => prev.map(p => {
-      if (p.id !== id) return p;
-      previousPlaylist = p;
-      return { ...p, ...updates };
-    }));
+    const optimisticPlaylist = normalizeCourse({ ...previousPlaylist, ...updates });
+
+    setPlaylists(prev => prev.map(p => (p.id === id ? optimisticPlaylist : p)));
     setEditingPlaylist(null);
 
     try {
-      await api.put(`/courses/${id}`, updates);
+      const { data } = await api.put(`/courses/${id}`, {
+        ...updates,
+        courseType: optimisticPlaylist.courseType,
+        isExternal: optimisticPlaylist.isExternal,
+        externalUrl: optimisticPlaylist.externalUrl,
+        folderName: optimisticPlaylist.folderName
+      });
+      const normalizedCourse = normalizeCourse(data);
+      setPlaylists(prev => prev.map(p => (p.id === id ? normalizedCourse : p)));
     } catch (err) {
-      if (previousPlaylist) {
-        setPlaylists(prev => prev.map(p => p.id === id ? previousPlaylist : p));
-      }
+      setPlaylists(prev => prev.map(p => (p.id === id ? previousPlaylist : p)));
+      setEditingPlaylist(previousPlaylist);
       console.error("Failed to update course in cloud", err);
       alert("Failed to save changes. The image might be too large.");
     }
@@ -602,9 +621,10 @@ function AppContent() {
     }
 
     // Save the current state for rollback
-    const previousPlaylists = playlists;
-    const previousUserData = userData;
-    const previousSessionFiles = sessionFiles;
+    const previousPlaylist = playlists.find(p => p.id === playlistId);
+    const previousPlaylistIndex = playlists.findIndex(p => p.id === playlistId);
+    const previousUserCourseData = userData[playlistId];
+    const previousSessionCourseFiles = sessionFiles[playlistId];
 
     // Optimistically update the UI immediately
     setPlaylists((prev) =>
@@ -632,9 +652,21 @@ function AppContent() {
       console.error("Failed to delete course", err);
 
       // Roll back the optimistic update
-      setPlaylists(previousPlaylists);
-      setUserData(previousUserData);
-      setSessionFiles(previousSessionFiles);
+      if (previousPlaylist) {
+        setPlaylists(prev => {
+          if (prev.some(p => p.id === playlistId)) return prev;
+          const next = [...prev];
+          const insertIndex = previousPlaylistIndex >= 0 ? Math.min(previousPlaylistIndex, next.length) : next.length;
+          next.splice(insertIndex, 0, previousPlaylist);
+          return next;
+        });
+      }
+      if (previousUserCourseData !== undefined) {
+        setUserData(prev => ({ ...prev, [playlistId]: previousUserCourseData }));
+      }
+      if (previousSessionCourseFiles !== undefined) {
+        setSessionFiles(prev => ({ ...prev, [playlistId]: previousSessionCourseFiles }));
+      }
 
       // Show error toast
       showToast(
@@ -719,6 +751,7 @@ function AppContent() {
           </div>
         </div>
       )}
+      
     </div>
   );
 }

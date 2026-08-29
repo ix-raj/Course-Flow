@@ -3,11 +3,13 @@ import { Play, Video, FileText, Trash2, Edit2, Link as LinkIcon } from 'lucide-r
 
 // --- UTILS ---
 import { calculateCourseProgress } from '../../utils/metrics';
+import { isExternalCourse } from '../../utils/course';
 
 export function CourseCard({ playlist, onClick, onDelete, onEdit, isDarkMode, userData }) {
   
   const progress = calculateCourseProgress(playlist, userData);
-  const platformName = playlist.isExternal
+  const externalCourse = isExternalCourse(playlist);
+  const platformName = externalCourse
     ? (() => {
         const lowerUrl = (playlist.externalUrl || '').toLowerCase();
         if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) return 'YouTube';
@@ -36,7 +38,7 @@ export function CourseCard({ playlist, onClick, onDelete, onEdit, isDarkMode, us
           </div>
         )}
 
-        {playlist.isExternal && (
+        {externalCourse && (
           <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 rounded-full border border-white/10 bg-black/70 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md shadow-sm">
             <LinkIcon className="h-3 w-3 text-indigo-300" />
             <span>{platformName}</span>
@@ -78,7 +80,7 @@ export function CourseCard({ playlist, onClick, onDelete, onEdit, isDarkMode, us
           <h3 className={`text-sm sm:text-base font-semibold line-clamp-1 mb-1 transition-colors duration-200 ${isDarkMode ? 'text-slate-100 group-hover:text-indigo-400' : 'text-slate-900 group-hover:text-indigo-700'}`}>
             {playlist.title}
           </h3>
-          {playlist.isExternal && (
+          {externalCourse && (
             <p className={`text-[10px] font-black uppercase tracking-widest mb-2 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
               External course
             </p>

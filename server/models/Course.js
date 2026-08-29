@@ -5,7 +5,8 @@ const courseSchema = new mongoose.Schema({
   title: { type: String, required: true },
   description: { type: String, default: '' },
   cover: { type: String, default: '' },
-  folderName: { type: String, default: 'External' }, // Removed required: true
+  folderName: { type: String, default: '' },
+  courseType: { type: String, enum: ['local', 'external'], default: 'local' },
   videoCount: { type: Number, default: 0 },
   noteCount: { type: Number, default: 0 },
   

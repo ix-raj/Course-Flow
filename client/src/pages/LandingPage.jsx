@@ -17,6 +17,7 @@ import {
 // --- UTILS & HELPERS ---
 import { getTodayDay, getTodayDateStr } from '../utils/dateUtils';
 import { calculateCourseProgress, formatStudyHours } from '../utils/metrics';
+import { isExternalCourse } from '../utils/course';
 
 const getPlatformName = (url) => {
   if (!url) return 'External';
@@ -32,7 +33,8 @@ const getPlatformName = (url) => {
 const DashboardCourseCard = ({ playlist, onClick, userData, isDarkMode }) => {
 
   const progress = calculateCourseProgress(playlist, userData);
-  const platformName = playlist.isExternal ? getPlatformName(playlist.externalUrl) : '';
+  const externalCourse = isExternalCourse(playlist);
+  const platformName = externalCourse ? getPlatformName(playlist.externalUrl) : '';
 
   return (
     <div 
@@ -46,7 +48,7 @@ const DashboardCourseCard = ({ playlist, onClick, userData, isDarkMode }) => {
           ) : (
              <div className="w-full h-full flex items-center justify-center bg-slate-800"><Monitor className="w-8 h-8 text-indigo-500" /></div>
           )}
-          {playlist.isExternal && (
+          {externalCourse && (
             <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 rounded-full border border-white/10 bg-black/70 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md shadow-sm">
               <Sparkles className="h-3 w-3 text-indigo-300" />
               <span>{platformName}</span>
@@ -65,7 +67,7 @@ const DashboardCourseCard = ({ playlist, onClick, userData, isDarkMode }) => {
 
        <div className="p-3 sm:p-4 flex flex-col flex-1">
           <h3 className={`text-sm sm:text-base font-bold line-clamp-1 mb-1 ${isDarkMode ? 'text-slate-100' : 'text-slate-900'}`}>{playlist.title}</h3>
-          {playlist.isExternal && (
+          {externalCourse && (
             <p className={`text-[10px] font-black uppercase tracking-widest mb-2 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
               External course
             </p>
@@ -348,7 +350,7 @@ export default function LandingPage({ playlists, onViewCourses, onOpen, userData
                   key={playlist.id} 
                   playlist={playlist} 
                   onClick={() => {
-                    if (playlist.isExternal && playlist.externalUrl) {
+                    if (isExternalCourse(playlist) && playlist.externalUrl) {
                       window.open(playlist.externalUrl, '_blank', 'noopener,noreferrer');
                       return;
                     }

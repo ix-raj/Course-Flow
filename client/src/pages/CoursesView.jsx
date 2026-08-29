@@ -8,6 +8,7 @@ import {
 // --- COMPONENT IMPORTS ---
 import { CourseCard } from '../components/ui/CourseCard';
 import { Header } from '../components/ui/Header';
+import { isExternalCourse } from '../utils/course';
 
 export default function CoursesView({ 
   playlists, isLoading = false, onOpen, onAdd, onDelete, onEdit, isDarkMode, setIsDarkMode, userData = {} 
@@ -239,7 +240,7 @@ export default function CoursesView({
                   key={playlist.id} 
                   playlist={playlist} 
                   onClick={() => {
-                    if (playlist.isExternal && playlist.externalUrl) {
+                    if (isExternalCourse(playlist) && playlist.externalUrl) {
                       window.open(playlist.externalUrl, '_blank', 'noopener,noreferrer');
                       return;
                     }
