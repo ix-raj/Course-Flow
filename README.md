@@ -25,15 +25,14 @@ By combining granular video-level progress tracking with high-level weekly and m
     * **Doubts:** Track unanswered questions and mark them as resolved later.
 * **Course-Wide Goals:** Set macro-level objectives for the entire course that remain visible no matter which module you are currently studying.
 
-### 🎯 Master Productivity Planner (The Goals Dashboard)
-A centralized hub to map out your educational trajectory, featuring three distinct views:
+### 🎯 Routine Planner
+A centralized daily and weekly planning workspace for organizing your learning routine:
 
-* **Daily Execution View:** See exactly what subjects to tackle today. Features an interactive timeline, daily focus mantras, and real-time radial progress trackers for your featured courses.
-* **Weekly Configuration:** Plan your week down to the subject level.
-    * Link specific local courses directly to your daily schedule.
-    * **Action Links:** Attach custom external URLs (like Notion docs, Google Calendars, or specific toolsets) directly to your daily subjects for instant access.
-* **Monthly Calendar:** Add, track, and manage long-term events (exams, project deadlines, team meetings) with visual indicators on a custom-built interactive calendar.
-* **Daily Check-Ins:** A robust habit-tracking system that logs your daily task completions to the database, ensuring your streak is never lost.
+* **Daily Timeline:** See the day’s tasks in order, with start times, durations, completion state, and course or external-resource links.
+* **Calibrated Day Start:** Set the time your day begins in 15-minute increments. The setting is stored in the cloud and remains available after refreshes and on other devices.
+* **Routine Studio:** Build weekly routines with custom task titles, descriptions, icons, colors, course links, and external action links.
+* **Monthly Calendar:** Add, track, and manage long-term events such as exams, project deadlines, and meetings.
+* **Daily Check-Ins:** Completion history is synchronized to the database so task progress is retained across sessions.
 
 ### ⚙️ Seamless Cloud Infrastructure
 * **True Multi-Device Sync:** Built on a customized MongoDB architecture. Everything from a checked-off task on Tuesday to a newly added calendar event is instantly synchronized.
