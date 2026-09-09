@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '../components/ui/Header';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 import { getTodayDay, getTodayDateStr, getFutureDateArray } from '../utils/dateUtils';
 import { 
   Sun, Moon, Code, Coffee, Monitor, Utensils, Gamepad2, 
@@ -64,7 +65,7 @@ const getIconColorStyles = (colorKey = 'blue', isDarkMode) => {
 export default function RoutinePage({ playlists, productivityData, isDarkMode, setIsDarkMode, onSync }) {
   const navigate = useNavigate();
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [wakeUpTime, setWakeUpTime] = useState(8 * 60 + 30); // 08:30 AM
+  const [wakeUpTime, setWakeUpTime] = useLocalStorage('courseflow_routine_start_time', 8 * 60 );
   const shellBg = isDarkMode
     ? 'bg-slate-1000 text-slate-300'
     : 'bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.08),transparent_30%),linear-gradient(180deg,#F5F7FB_0%,#EEF2F8_100%)] text-slate-800';
